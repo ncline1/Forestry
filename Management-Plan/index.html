@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Black Creek Forest: Interactive Management Plan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Earthy Harmony -->
+    <!-- Application Structure Plan: The SPA is designed as a guided, narrative dashboard following the logical workflow of a forester creating a management plan for the "Black Creek Forest" scenario. The structure is: 1. Introduction to the client/objectives. 2. An interactive dashboard to analyze the land (inventory data per stand). 3. A timeline to explore the 10-year management prescriptions. 4. A financial analysis section with charts. This task-oriented flow was chosen over a direct textbook chapter structure because it turns passive reading into an active, decision-making simulation, making the complex information far more digestible and engaging for the user. -->
+    <!-- Visualization & Content Choices: 
+        - Landowner Objectives: Report Info: Prioritized goals list. -> Goal: Inform. -> Viz: Styled HTML cards. -> Interaction: Static display. -> Justification: Clearly presents the foundational drivers of the plan. -> Method: HTML/Tailwind.
+        - Stand Inventory: Report Info: Data tables for each stand. -> Goal: Compare/Inform. -> Viz: Donut chart for species mix, stat cards for KPIs. -> Interaction: User clicks stand buttons to dynamically update all charts and stats. -> Justification: Allows easy, direct comparison of forest stands and visualizes composition effectively. -> Library/Method: Chart.js, HTML/JS.
+        - 10-Year Schedule: Report Info: Table of management actions. -> Goal: Show change/process. -> Viz: Interactive vertical timeline. -> Interaction: Click a timeline event to expand/collapse and view the detailed prescription. -> Justification: Intuitive for showing a time-based plan; hides complex details until requested, keeping the UI clean. -> Method: HTML/JS.
+        - Financial Plan: Report Info: Budget table. -> Goal: Compare/Inform. -> Viz: Bar chart for annual net revenue. -> Interaction: Hover tooltips. -> Justification: Quickly visualizes cash flow, highlighting income vs. cost years. -> Library/Method: Chart.js.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .nav-active {
+            background-color: #15803d; /* green-700 */
+            color: white;
+        }
+        .nav-inactive {
+            background-color: #f0fdf4; /* green-50 */
+            color: #166534; /* green-800 */
+        }
+        .stand-btn-active {
+            background-color: #166534; /* green-800 */
+            color: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .stand-btn-inactive {
+            background-color: #dcfce7; /* green-100 */
+            color: #16a34a; /* green-600 */
+        }
+        .timeline-item-content {
+            transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        .timeline-item-content.expanded {
+            max-height: 1000px;
+            opacity: 1;
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 320px;
+            width: 100%;
+            max-width: 450px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-amber-50 text-gray-800">
+
+    <div id="app" class="max-w-7xl mx-auto p-4 md:p-8">
+
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-green-900">Black Creek Forest</h1>
+            <p class="text-xl md:text-2xl text-green-700 mt-2">An Interactive Integrated Management Plan</p>
+        </header>
+
+        <nav class="flex flex-wrap justify-center gap-2 md:gap-4 mb-8 sticky top-2 z-10 bg-amber-50/80 backdrop-blur-sm py-2 rounded-xl">
+            <button data-target="scenario" class="nav-button nav-active text-sm md:text-base font-semibold py-2 px-4 rounded-full shadow-sm">Scenario</button>
+            <button data-target="land" class="nav-button nav-inactive text-sm md:text-base font-semibold py-2 px-4 rounded-full shadow-sm">The Land</button>
+            <button data-target="plan" class="nav-button nav-inactive text-sm md:text-base font-semibold py-2 px-4 rounded-full shadow-sm">The Plan</button>
+            <button data-target="financials" class="nav-button nav-inactive text-sm md:text-base font-semibold py-2 px-4 rounded-full shadow-sm">The Numbers</button>
+        </nav>
+
+        <main>
+            <!-- Section: Scenario -->
+            <section id="scenario" class="content-section space-y-8">
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <h2 class="text-2xl font-bold text-green-800 mb-4 border-b-2 border-green-200 pb-2">Meet the Landowners</h2>
+                     <p class="text-gray-700 leading-relaxed">
+                        This interactive application guides you through the process of creating a 10-year Integrated Management Plan for the "Black Creek Forest," a 100-acre property in Lewis County, Washington. The property is owned by John and Sarah Miller, who are in their early 60s and recently retired. They wish to manage their forest to supplement their retirement income while also being excellent stewards of the land. This plan translates their vision into actionable, science-based steps.
+                    </p>
+                </div>
+                 <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <h2 class="text-2xl font-bold text-green-800 mb-4 border-b-2 border-green-200 pb-2">Landowner Objectives</h2>
+                     <p class="text-gray-700 leading-relaxed mb-6">
+                        Effective forest management begins with understanding the landowner's goals. All decisions in this plan are designed to meet the Miller family's objectives, which they have ranked by priority. These goals provide the "why" behind every prescribed action.
+                    </p>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 text-gray-700">
+                        <div class="bg-green-50 p-4 rounded-xl border border-green-200">
+                            <h3 class="font-bold text-green-900 flex items-center"><span class="text-3xl font-black text-green-300 mr-3">1</span>Periodic Income</h3>
+                            <p class="mt-2 text-sm">Generate significant income from at least one timber harvest within the 10-year period.</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-xl border border-green-200">
+                            <h3 class="font-bold text-green-900 flex items-center"><span class="text-3xl font-black text-green-300 mr-3">2</span>Wildlife Habitat</h3>
+                            <p class="mt-2 text-sm">Improve habitat for black-tailed deer and a diversity of native songbirds.</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-xl border border-green-200">
+                            <h3 class="font-bold text-green-900 flex items-center"><span class="text-3xl font-black text-green-300 mr-3">3</span>Aesthetics & Recreation</h3>
+                            <p class="mt-2 text-sm">Maintain and enhance the scenic quality along the main hiking trail and the view from their home.</p>
+                        </div>
+                         <div class="bg-green-50 p-4 rounded-xl border border-green-200">
+                            <h3 class="font-bold text-green-900 flex items-center"><span class="text-3xl font-black text-green-300 mr-3">4</span>Water Quality</h3>
+                            <p class="mt-2 text-sm">Protect the health of Black Creek and its tributaries during all management activities.</p>
+                        </div>
+                         <div class="bg-green-50 p-4 rounded-xl border border-green-200">
+                            <h3 class="font-bold text-green-900 flex items-center"><span class="text-3xl font-black text-green-300 mr-3">5</span>Legacy</h3>
+                            <p class="mt-2 text-sm">Pass the land on to their children in a healthier and more valuable condition.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: The Land -->
+            <section id="land" class="content-section hidden space-y-8">
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <h2 class="text-2xl font-bold text-green-800 mb-4 border-b-2 border-green-200 pb-2">The Land: Inventory & Analysis</h2>
+                    <p class="text-gray-700 leading-relaxed mb-6">
+                        Before making recommendations, a forester must understand the land itself. The 100-acre Black Creek Forest has been delineated into three distinct management units called "stands" based on their species, age, and condition. Use the buttons below to explore the inventory data for each stand. Notice how the data in the charts and cards updates as you select a different stand. This data forms the scientific basis for the management prescriptions.
+                    </p>
+                    <div class="flex justify-center gap-2 md:gap-4 mb-8">
+                        <button class="stand-btn stand-btn-active" data-stand="1">Stand 1</button>
+                        <button class="stand-btn stand-btn-inactive" data-stand="2">Stand 2</button>
+                        <button class="stand-btn stand-btn-inactive" data-stand="3">Stand 3</button>
+                    </div>
+                    <div class="grid lg:grid-cols-2 gap-8 items-center">
+                        <div class="order-2 lg:order-1">
+                            <h3 id="stand-title" class="text-xl font-bold text-green-800 text-center mb-4"></h3>
+                            <div class="grid grid-cols-2 gap-4 text-center">
+                                <div class="bg-green-50 p-4 rounded-xl border border-green-200">
+                                    <p class="text-sm font-medium text-green-700">Acreage</p>
+                                    <p id="stand-acreage" class="text-2xl font-bold text-green-900"></p>
+                                </div>
+                                <div class="bg-green-50 p-4 rounded-xl border border-green-200">
+                                    <p class="text-sm font-medium text-green-700">Age</p>
+                                    <p id="stand-age" class="text-2xl font-bold text-green-900"></p>
+                                </div>
+                                <div class="bg-green-50 p-4 rounded-xl border border-green-200">
+                                    <p class="text-sm font-medium text-green-700">Basal Area</p>
+                                    <p id="stand-ba" class="text-2xl font-bold text-green-900"></p>
+                                </div>
+                                <div class="bg-green-50 p-4 rounded-xl border border-green-200">
+                                    <p class="text-sm font-medium text-green-700">Volume</p>
+                                    <p id="stand-volume" class="text-2xl font-bold text-green-900"></p>
+                                </div>
+                            </div>
+                            <div class="mt-6 bg-amber-100/50 p-4 rounded-xl border border-amber-200">
+                                <h4 class="font-bold text-gray-800">Description & Health</h4>
+                                <p id="stand-description" class="mt-2 text-sm text-gray-700 leading-relaxed"></p>
+                            </div>
+                        </div>
+                         <div class="order-1 lg:order-2">
+                            <h3 class="text-xl font-bold text-green-800 text-center mb-2">Species Composition</h3>
+                            <div class="chart-container">
+                                <canvas id="speciesChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: The Plan -->
+            <section id="plan" class="content-section hidden">
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <h2 class="text-2xl font-bold text-green-800 mb-4 border-b-2 border-green-200 pb-2">The Plan: 10-Year Activity Schedule</h2>
+                    <p class="text-gray-700 leading-relaxed mb-6">
+                        This is the operational heart of the management plan. The following timeline lays out all planned activities for the next decade, from maintenance to harvesting. Each action is prescribed for a specific stand and is designed to move the forest toward the Miller's desired future condition. Click on any activity to expand it and read the detailed silvicultural prescription, including the critical "justification" that explains why each action was chosen.
+                    </p>
+                    <div id="timeline-container" class="relative border-l-2 border-green-200 ml-4 pl-4 space-y-8">
+                        <!-- Timeline items will be injected here by JS -->
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section: The Financials -->
+            <section id="financials" class="content-section hidden">
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <h2 class="text-2xl font-bold text-green-800 mb-4 border-b-2 border-green-200 pb-2">The Numbers: Financial Plan & Projections</h2>
+                    <p class="text-gray-700 leading-relaxed mb-6">
+                        A management plan must be economically viable. This section translates the 10-year activity schedule into a financial forecast. The chart visualizes the expected net cash flow for each year, making it easy to see when investments are required and when income is generated. Importantly, the plan utilizes government cost-share programs (like NRCS EQIP) to reduce the landowner's out-of-pocket expenses for conservation practices, making ambitious stewardship goals affordable.
+                    </p>
+                    <div class="grid lg:grid-cols-5 gap-8">
+                        <div class="lg:col-span-3">
+                            <h3 class="text-xl font-bold text-green-800 text-center mb-2">Net Annual Cost/Revenue</h3>
+                             <div class="chart-container h-96">
+                                <canvas id="financialChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-2 space-y-4">
+                             <div class="bg-green-50 p-4 rounded-xl border border-green-200 text-center">
+                                <p class="text-sm font-medium text-green-700">Projected 10-Year Revenue</p>
+                                <p id="total-revenue" class="text-3xl font-bold text-green-900"></p>
+                            </div>
+                            <div class="bg-red-50 p-4 rounded-xl border border-red-200 text-center">
+                                <p class="text-sm font-medium text-red-700">Total 10-Year Costs</p>
+                                <p id="total-cost" class="text-3xl font-bold text-red-900"></p>
+                            </div>
+                            <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 text-center">
+                                <p class="text-sm font-medium text-blue-700">Net 10-Year Income</p>
+                                <p id="net-income" class="text-3xl font-bold text-blue-900"></p>
+                            </div>
+                            <div class="bg-amber-100/50 p-4 rounded-xl border border-amber-200">
+                                 <h4 class="font-bold text-gray-800">Note on Cost-Share</h4>
+                                 <p class="text-sm text-gray-700 mt-2">The budget leverages cost-share programs which reimburse the landowners for a percentage of costs for approved conservation work (e.g., invasive species control, planting), significantly improving the plan's financial viability.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="text-center mt-12 text-sm text-gray-500">
+            <p>This interactive application is a learning tool based on the "Becoming the Forester" chapter.</p>
+            <p>Data is derived from the Black Creek Forest capstone project scenario.</p>
+        </footer>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const standData = {
+            '1': {
+                title: 'Stand 1: Upland Douglas-fir',
+                acreage: '60 acres',
+                age: '40 years',
+                ba: '180 sq ft/ac',
+                volume: '18 MBF/ac',
+                description: 'Generally healthy but overstocked. Significant competition is slowing growth and increasing stress on the trees, making it an ideal candidate for thinning.',
+                species: { labels: ['Douglas-fir', 'W. Hemlock'], values: [90, 10] }
+            },
+            '2': {
+                title: 'Stand 2: Mixed-Conifer Slopes',
+                acreage: '25 acres',
+                age: '40 years',
+                ba: '160 sq ft/ac',
+                volume: '12 MBF/ac',
+                description: 'Some root rot present in Douglas-fir on lower, wetter slopes. The red alder is nearing maturity and starting to decline, presenting an opportunity for a harvest.',
+                species: { labels: ['Douglas-fir', 'Red Alder', 'W. Hemlock'], values: [50, 30, 20] }
+            },
+            '3': {
+                title: 'Stand 3: Riparian Zone',
+                acreage: '15 acres',
+                age: 'Multi-aged',
+                ba: 'Variable',
+                volume: 'N/A',
+                description: 'A healthy, functional streamside ecosystem with large legacy cedar trees. Management is restricted by law to protect water quality. Contains patches of invasive English ivy that need control.',
+                species: { labels: ['Red Alder', 'W. Redcedar', 'Bigleaf Maple'], values: [60, 30, 10] }
+            }
+        };
+
+        const managementPlan = [
+            { year: 1, stand: 'All', activity: 'Boundary Line Maintenance', cost: 500, revenue: 0, program: 'N/A', net: -500,
+              prescription: { dfc: 'Clearly marked and maintained property boundaries.', rec: 'Inspect and repaint boundary lines as needed.', just: 'Prevents trespass and timber theft, and is a requirement for many certification and tax programs.' } },
+            { year: 2, stand: '3', activity: 'Invasive Species Control', cost: 1875, revenue: 0, program: 'EQIP (75%)', net: -469,
+              prescription: { dfc: 'A riparian zone free of invasive English ivy, allowing native understory to thrive.', rec: 'Treat ivy patches with approved herbicide application (cut-stump or foliar spray).', just: 'Protects the ecological health and biodiversity of the critical riparian area, a high priority for the landowner and required for good stewardship.' } },
+            { year: 3, stand: '1', activity: 'Commercial Thinning', cost: 1000, revenue: 30000, program: 'N/A', net: 29000,
+              prescription: { dfc: 'A healthy, vigorous Douglas-fir stand with improved growth rates and larger, higher-value trees.', rec: 'Conduct a commercial thinning from below to a target residual basal area of 110-120 sq ft/acre. Favor the dominant, best-formed Douglas-fir as leave trees.', just: 'The stand is overstocked (180 BA), suppressing growth. Thinning will capture value from smaller trees, concentrate growth on the best crop trees, increase habitat diversity, and improve stand resilience. This meets the primary income objective.' } },
+            { year: 4, stand: 'All', activity: 'Annual Property Taxes', cost: 1000, revenue: 0, program: 'N/A', net: -1000,
+              prescription: { dfc: 'Maintain good legal standing.', rec: 'Pay annual property taxes.', just: 'A necessary cost of land ownership.' } },
+            { year: 5, stand: '2', activity: 'Salvage & Group Selection Harvest', cost: 7500, revenue: 50000, program: 'N/A', net: 42500,
+              prescription: { dfc: 'A structurally diverse mixed-conifer stand with reduced disease risk and new regeneration.', rec: 'Implement a variable retention harvest. Salvage declining alder and diseased fir. Create small group selection openings (0.25-0.5 acres) to regenerate shade-intolerant species.', just: 'Addresses the declining health of alder and fir (sanitation), generates significant income, and creates openings that provide excellent deer forage while maintaining overall forest cover for aesthetics and songbirds.' } },
+            { year: 6, stand: 'All', activity: 'Road Maintenance', cost: 2000, revenue: 0, program: 'N/A', net: -2000,
+              prescription: { dfc: 'A stable and erosion-free road system.', rec: 'Grade main access road and install waterbars on old skid trails post-harvest.', just: 'Essential for accessing the property for management and recreation, and critical for protecting water quality by preventing road-related erosion (a key objective).' } },
+            { year: 7, stand: 'All', activity: 'Annual Property Taxes', cost: 1000, revenue: 0, program: 'N/A', net: -1000,
+              prescription: { dfc: 'Maintain good legal standing.', rec: 'Pay annual property taxes.', just: 'A necessary cost of land ownership.' } },
+            { year: 8, stand: '3', activity: 'Riparian Enhancement Planting', cost: 2250, revenue: 0, program: 'EQIP (75%)', net: -563,
+              prescription: { dfc: 'Increased conifer component and structural diversity in the riparian zone.', rec: 'Underplant shade-tolerant western redcedar and hemlock in gaps within the alder-dominated riparian zone.', just: 'Enhances long-term habitat for birds and aquatic species by establishing long-lived conifers. This furthers the wildlife and legacy objectives and is a high-priority practice for cost-share funding.' } },
+            { year: 9, stand: 'All', activity: 'Professional Plan Review', cost: 1500, revenue: 0, program: 'N/A', net: -1500,
+              prescription: { dfc: 'An up-to-date and adaptive management plan.', rec: 'Consulting forester reviews progress and updates plan for the next 10-year period.', just: 'Ensures the plan remains a "living document" that adapts to changing forest conditions and landowner goals, fulfilling the legacy objective.' } },
+            { year: 10, stand: 'All', activity: 'Annual Property Taxes', cost: 1000, revenue: 0, program: 'N/A', net: -1000,
+              prescription: { dfc: 'Maintain good legal standing.', rec: 'Pay annual property taxes.', just: 'A necessary cost of land ownership.' } }
+        ];
+
+        let speciesChart, financialChart;
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(value);
+        }
+
+        function updateStandView(standId) {
+            const data = standData[standId];
+            document.getElementById('stand-title').innerText = data.title;
+            document.getElementById('stand-acreage').innerText = data.acreage;
+            document.getElementById('stand-age').innerText = data.age;
+            document.getElementById('stand-ba').innerText = data.ba;
+            document.getElementById('stand-volume').innerText = data.volume;
+            document.getElementById('stand-description').innerHTML = data.description;
+            
+            speciesChart.data.labels = data.species.labels;
+            speciesChart.data.datasets[0].data = data.species.values;
+            speciesChart.update();
+
+            document.querySelectorAll('.stand-btn').forEach(btn => {
+                btn.classList.remove('stand-btn-active');
+                btn.classList.add('stand-btn-inactive');
+            });
+            document.querySelector(`.stand-btn[data-stand='${standId}']`).classList.add('stand-btn-active');
+            document.querySelector(`.stand-btn[data-stand='${standId}']`).classList.remove('stand-btn-inactive');
+        }
+
+        function createSpeciesChart() {
+            const ctx = document.getElementById('speciesChart').getContext('2d');
+            speciesChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Species %',
+                        data: [],
+                        backgroundColor: ['#166534', '#16a34a', '#4ade80', '#86efac'],
+                        borderColor: '#f0fdf4',
+                        borderWidth: 4,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { size: 14 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createFinancialChart() {
+            const ctx = document.getElementById('financialChart').getContext('2d');
+            const labels = managementPlan.map(item => `Year ${item.year}`);
+            const data = managementPlan.map(item => item.net);
+            
+            financialChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Net Cost/Revenue',
+                        data: data,
+                        backgroundColor: data.map(value => value >= 0 ? 'rgba(22, 163, 74, 0.7)' : 'rgba(239, 68, 68, 0.7)'),
+                        borderColor: data.map(value => value >= 0 ? 'rgba(22, 163, 74, 1)' : 'rgba(239, 68, 68, 1)'),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'x',
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                             callbacks: {
+                                label: function(context) {
+                                    return `Net: ${formatCurrency(context.raw)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const totalRevenue = managementPlan.reduce((acc, item) => acc + item.revenue, 0);
+            const totalCost = managementPlan.reduce((acc, item) => acc + item.cost, 0);
+            document.getElementById('total-revenue').innerText = formatCurrency(totalRevenue);
+            document.getElementById('total-cost').innerText = formatCurrency(totalCost);
+            document.getElementById('net-income').innerText = formatCurrency(totalRevenue - totalCost);
+        }
+
+        function createTimeline() {
+            const container = document.getElementById('timeline-container');
+            managementPlan.forEach(item => {
+                const div = document.createElement('div');
+                div.classList.add('timeline-item', 'relative');
+                
+                let bgColor = item.net >= 0 ? 'bg-green-500' : 'bg-red-500';
+                if (item.net === 0 && item.cost > 0) bgColor = 'bg-amber-500';
+
+                div.innerHTML = `
+                    <div class="absolute -left-[2.1rem] top-1.5 w-8 h-8 ${bgColor} rounded-full text-white flex items-center justify-center font-bold text-sm shadow-md">${item.year}</div>
+                    <div class="ml-8">
+                        <div class="timeline-item-header cursor-pointer bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow duration-300">
+                            <h4 class="font-bold text-green-800">${item.activity}</h4>
+                            <p class="text-sm text-gray-600">Stand: ${item.stand}</p>
+                            <p class="text-sm font-semibold ${item.net >= 0 ? 'text-green-600' : 'text-red-600'}">${formatCurrency(item.net)}</p>
+                        </div>
+                        <div class="timeline-item-content bg-gray-50 p-4 rounded-b-lg -mt-1 shadow-inner">
+                             <h5 class="font-semibold text-gray-700">Desired Future Condition:</h5>
+                             <p class="text-sm text-gray-600 mb-2">${item.prescription.dfc}</p>
+                             <h5 class="font-semibold text-gray-700">Recommendation:</h5>
+                             <p class="text-sm text-gray-600 mb-2">${item.prescription.rec}</p>
+                             <h5 class="font-semibold text-gray-700">Justification:</h5>
+                             <p class="text-sm text-gray-600">${item.prescription.just}</p>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+            
+            document.querySelectorAll('.timeline-item-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const content = header.nextElementSibling;
+                    content.classList.toggle('expanded');
+                });
+            });
+        }
+        
+        function setupNavigation() {
+            const buttons = document.querySelectorAll('.nav-button');
+            const sections = document.querySelectorAll('.content-section');
+
+            buttons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetId = button.dataset.target;
+
+                    buttons.forEach(btn => {
+                        btn.classList.remove('nav-active');
+                        btn.classList.add('nav-inactive');
+                    });
+                    button.classList.add('nav-active');
+                    button.classList.remove('nav-inactive');
+
+                    sections.forEach(section => {
+                        if (section.id === targetId) {
+                            section.classList.remove('hidden');
+                        } else {
+                            section.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+        }
+        
+        function init() {
+            createSpeciesChart();
+            createFinancialChart();
+            createTimeline();
+            updateStandView('1');
+            setupNavigation();
+            
+            document.querySelectorAll('.stand-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    updateStandView(button.dataset.stand);
+                });
+            });
+        }
+
+        init();
+    });
+    </script>
+</body>
+</html>
