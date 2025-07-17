@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Guide to Integrated Forest Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Earthly Harmony -->
+    <!-- Application Structure Plan: The SPA is designed with a persistent top navigation to allow non-linear exploration of the three core management areas: Watershed, Wildlife, and Recreation. It opens with an introduction to the core concept of Ecosystem Services to frame the user's thinking. Each section is a self-contained module with interactive elements (diagrams, charts, selectors) designed to transform dense text/tables into engaging experiences. The final case study synthesizes these concepts. This structure was chosen to break free from the linear textbook format, promoting user-driven learning and making complex relationships (e.g., silviculture vs. wildlife outcomes) more tangible and easier to grasp. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Ecosystem Services Framework -> Goal: Introduce the 4 types of services -> Viz/Presentation: Interactive cards -> Interaction: Click to reveal details -> Justification: More engaging than a list, encourages discovery -> Library/Method: HTML/CSS/JS.
+        - Report Info: Forestry BMPs (Table 12.1) -> Goal: Explain key practices for water protection -> Viz/Presentation: Icon-based tabbed interface -> Interaction: Click icons for different categories (Roads, Crossings) -> Justification: Organizes complex information into digestible chunks, more visual than a table -> Library/Method: HTML/CSS/JS.
+        - Report Info: Silviculture effects on wildlife (Table 12.2) -> Goal: Compare how different harvesting methods impact habitat -> Viz/Presentation: Dynamic bar chart -> Interaction: User selects a wildlife guild from a dropdown, chart updates to show treatment suitability -> Justification: Turns a static table into an interactive tool for comparing outcomes directly -> Library/Method: Chart.js.
+        - Report Info: Recreation Opportunity Spectrum (ROS) (Table 12.3) -> Goal: Explain the continuum of recreational settings -> Viz/Presentation: Horizontal visual spectrum -> Interaction: Click on a spectrum class to view its detailed characteristics -> Justification: Effectively visualizes the 'spectrum' concept and makes comparison between classes intuitive -> Library/Method: HTML/CSS/JS.
+        - Report Info: Ponderosa Pine Case Study -> Goal: Show a real-world example of integrated management -> Viz/Presentation: Side-by-side 'before/after' visual comparison -> Interaction: Static visual with explanatory text -> Justification: Clearly illustrates the problem (dense forest) and the solution (restored forest) -> Library/Method: HTML/CSS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FBFBF8;
+            color: #383838;
+        }
+        .nav-button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .nav-button.active {
+            background-color: #4A6C4A;
+            color: #FFFFFF;
+        }
+        .nav-button:not(.active):hover {
+            background-color: #EAE7E0;
+            border-color: #4A6C4A;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .interactive-tab {
+            cursor: pointer;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .interactive-tab.active {
+            background-color: #4A6C4A;
+            color: white;
+        }
+        .interactive-tab:not(.active):hover {
+            background-color: #EAE7E0;
+        }
+        .ros-segment {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            border-width: 2px;
+            border-style: solid;
+            border-color: #D1D5DB;
+        }
+        .ros-segment.active {
+            transform: scale(1.05);
+            color: #FFFFFF;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-[#F8F7F4]/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-200">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div class="flex flex-col sm:flex-row justify-between items-center">
+                <h1 class="text-2xl font-bold text-gray-800 mb-2 sm:mb-0">Forests: More Than Timber</h1>
+                <div id="nav-container" class="flex flex-wrap justify-center space-x-1 sm:space-x-2">
+                    <button data-target="intro" class="nav-button active">Introduction</button>
+                    <button data-target="watershed" class="nav-button">Watershed</button>
+                    <button data-target="wildlife" class="nav-button">Wildlife</button>
+                    <button data-target="recreation" class="nav-button">Recreation</button>
+                    <button data-target="case-study" class="nav-button">Case Study</button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- Introduction Section -->
+        <section id="intro" class="content-section active">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4 text-[#4A6C4A]">The Multifunctional Forest</h2>
+                <p class="max-w-3xl mx-auto text-lg text-gray-600">Modern forestry has evolved from focusing solely on timber to embracing Integrated Forest Management (IFM). This approach stewards forests for a full suite of benefits using an **Ecosystem Services** framework. Explore the four types of services below to understand the diverse values our forests provide.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="card">
+                    <h3 class="text-2xl font-bold mb-3 text-cyan-700">🌲 Provisioning</h3>
+                    <p class="text-gray-600">These are the material products we get from forests. The most obvious is timber, but they also include non-timber products like mushrooms and medicinal plants. Critically, forests provide the essential provisioning service of fresh water.</p>
+                </div>
+                <div class="card">
+                    <h3 class="text-2xl font-bold mb-3 text-green-700">🌬️ Regulating</h3>
+                    <p class="text-gray-600">These are benefits from the regulation of ecosystem processes. Forests are vital for climate regulation through carbon sequestration, filtering and purifying water, controlling floods, and preventing soil erosion.</p>
+                </div>
+                <div class="card">
+                    <h3 class="text-2xl font-bold mb-3 text-amber-700">🏕️ Cultural</h3>
+                    <p class="text-gray-600">These are the non-material benefits we enjoy. This category includes all forms of recreation like hiking and camping, as well as the aesthetic beauty, spiritual enrichment, and educational opportunities forests offer.</p>
+                </div>
+                <div class="card">
+                    <h3 class="text-2xl font-bold mb-3 text-stone-700">🌱 Supporting</h3>
+                    <p class="text-gray-600">These are the foundational services necessary for all others to exist. They include fundamental processes like soil formation, nutrient cycling, and primary production—the very building blocks of a healthy forest ecosystem.</p>
+                </div>
+            </div>
+            <div class="mt-12 p-6 bg-white rounded-lg shadow-md">
+                 <h3 class="text-2xl font-bold mb-2">The Forester's Challenge: Trade-offs & Synergies</h3>
+                 <p class="text-gray-700">Managing for multiple services is a balancing act. A **trade-off** occurs when enhancing one service diminishes another (e.g., maximizing timber yield may reduce habitat for certain wildlife). A **synergy** occurs when managing for one service enhances another (e.g., a thinning to reduce wildfire risk can also improve tree growth and wildlife forage). The modern forester's role is to navigate these complex interactions to achieve a balance that reflects both ecological realities and societal values.</p>
+            </div>
+        </section>
+
+        <!-- Watershed Section -->
+        <section id="watershed" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4 text-[#4A6C4A]">Watershed Management: The Foundation of Clean Water</h2>
+                <p class="max-w-3xl mx-auto text-lg text-gray-600">Forests are nature's water filters. This section explores how forests protect water quality and how forestry operations are managed to prevent pollution. The primary tools are **Best Management Practices (BMPs)**, a set of preventative measures designed to control soil erosion.</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                <div class="flex justify-center space-x-2 md:space-x-4 mb-6 border-b pb-4">
+                    <button data-tab="bmp-roads" class="interactive-tab bmp-tab active">🛤️ Roads & Trails</button>
+                    <button data-tab="bmp-crossings" class="interactive-tab bmp-tab">🌉 Stream Crossings</button>
+                    <button data-tab="bmp-harvesting" class="interactive-tab bmp-tab">🪓 Harvesting</button>
+                    <button data-tab="bmp-buffers" class="interactive-tab bmp-tab">🏞️ Riparian Buffers</button>
+                </div>
+                <div id="bmp-content-container">
+                    <div id="bmp-roads" class="bmp-content active">
+                        <h3 class="text-2xl font-bold mb-3">BMPs for Roads & Trails</h3>
+                        <p class="mb-4 text-gray-600">Roads are the #1 source of sediment from forestry. Proper drainage is the key to minimizing their impact.</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li><strong>Planning:</strong> Locate roads away from streams and steep slopes. Minimize total mileage.</li>
+                            <li><strong>Drainage:</strong> Shape the road surface (crown/outslope) to shed water. Install water bars and culverts to divert runoff into vegetated areas for filtering.</li>
+                            <li><strong>Retirement:</strong> Close and revegetate temporary roads after harvest to prevent future erosion.</li>
+                        </ul>
+                    </div>
+                    <div id="bmp-crossings" class="bmp-content hidden">
+                        <h3 class="text-2xl font-bold mb-3">BMPs for Stream Crossings</h3>
+                        <p class="mb-4 text-gray-600">Crossings are direct points of contact with streams and require extreme care.</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li><strong>Minimize Crossings:</strong> Design the road layout to cross streams as few times as possible.</li>
+                            <li><strong>Proper Angle & Location:</strong> Cross streams at a right angle on a straight, stable channel section.</li>
+                            <li><strong>Use Bridges or Correctly Sized Culverts:</strong> Structures must be large enough to pass peak storm flows and allow for fish passage.</li>
+                        </ul>
+                    </div>
+                    <div id="bmp-harvesting" class="bmp-content hidden">
+                        <h3 class="text-2xl font-bold mb-3">BMPs for Timber Harvesting</h3>
+                        <p class="mb-4 text-gray-600">Managing equipment and timing can drastically reduce soil disturbance.</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li><strong>Landings:</strong> Locate log landings on stable, well-drained sites far from water bodies.</li>
+                            <li><strong>Skid Trails:</strong> Pre-plan skid trail locations to minimize grade and soil disturbance.</li>
+                            <li><strong>Timing:</strong> Suspend operations during wet weather when soils are saturated and easily compacted or rutted.</li>
+                        </ul>
+                    </div>
+                    <div id="bmp-buffers" class="bmp-content hidden">
+                        <h3 class="text-2xl font-bold mb-3">BMPs for Riparian Buffers</h3>
+                        <p class="mb-4 text-gray-600">A buffer zone, or Streamside Management Zone (SMZ), is perhaps the most critical BMP.</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li><strong>Filter Runoff:</strong> The buffer traps sediment and pollutants from upslope harvest areas.</li>
+                            <li><strong>Stabilize Banks:</strong> Tree roots hold stream banks together, preventing erosion.</li>
+                            <li><strong>Provide Shade:</strong> Canopy cover moderates water temperature, which is crucial for aquatic life like trout.</li>
+                            <li><strong>Create Habitat:</strong> Fallen logs (large woody debris) create essential habitat structure in the stream.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Wildlife Section -->
+        <section id="wildlife" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4 text-[#4A6C4A]">Silviculture for Wildlife: Crafting Diverse Habitats</h2>
+                <p class="max-w-3xl mx-auto text-lg text-gray-600">Silviculture—the art of growing forests—is a powerful tool for creating and enhancing wildlife habitat. Different treatments create different forest structures, benefiting different groups of species. Select a wildlife guild below to see which silvicultural treatments best support it.</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                    <div class="lg:col-span-2">
+                        <h3 class="text-2xl font-bold mb-4">Interactive Silviculture Selector</h3>
+                        <label for="wildlife-selector" class="block mb-2 font-semibold text-gray-700">Select a Wildlife Guild to Manage For:</label>
+                        <select id="wildlife-selector" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                            <option value="early">Early-Successional Species (Deer, Quail, Rabbits)</option>
+                            <option value="interior">Mature, Interior-Forest Species (Ovenbird, Flying Squirrels)</option>
+                            <option value="generalist">Generalists & Mast-Lovers (Turkey, Squirrels)</option>
+                            <option value="fire">Fire-Adapted Species (Red-cockaded Woodpecker)</option>
+                            <option value="cavity">Cavity-Nesting Species</option>
+                        </select>
+                        <div id="wildlife-description" class="mt-6 p-4 bg-gray-50 rounded-md border">
+                            <h4 class="font-bold text-lg mb-2">Early-Successional Species</h4>
+                            <p class="text-gray-600">These species thrive in the dense cover and abundant forage of young forests. Clearcutting is the most effective tool, resetting the forest to its earliest stage, creating a flush of grasses, forbs, and shrubs perfect for food and cover.</p>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-3">
+                         <div class="chart-container">
+                            <canvas id="wildlifeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recreation Section -->
+        <section id="recreation" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4 text-[#4A6C4A]">Recreation Management: From the Paved to the Primeval</h2>
+                <p class="max-w-3xl mx-auto text-lg text-gray-600">Forests provide a huge range of recreational opportunities. To manage for quality experiences and minimize conflict, agencies use the **Recreation Opportunity Spectrum (ROS)**. Click on a class in the spectrum below to explore its unique characteristics.</p>
+            </div>
+
+            <div class="w-full bg-white rounded-lg shadow-lg p-6 md:p-8">
+                <div id="ros-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-0">
+                    <div id="ros-primitive" class="ros-segment rounded-l-lg active p-4" style="background-color: #166534;">Primitive</div>
+                    <div id="ros-semi-primitive-nm" class="ros-segment p-4" style="background-color: #15803d;">Semi-Prim. (NM)</div>
+                    <div id="ros-semi-primitive-m" class="ros-segment p-4" style="background-color: #22c55e;">Semi-Prim. (M)</div>
+                    <div id="ros-roaded-natural" class="ros-segment p-4" style="background-color: #facc15;">Roaded Natural</div>
+                    <div id="ros-rural" class="ros-segment p-4" style="background-color: #fb923c;">Rural</div>
+                    <div id="ros-urban" class="ros-segment rounded-r-lg p-4" style="background-color: #9ca3af;">Urban</div>
+                </div>
+                <div id="ros-details" class="mt-6 p-6 bg-gray-50 rounded-md border transition-all duration-300">
+                    <!-- Details will be injected here by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Case Study Section -->
+        <section id="case-study" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4 text-[#4A6C4A]">Integrated Management in Action</h2>
+                <p class="max-w-3xl mx-auto text-lg text-gray-600">The Ponderosa Pine forests of the American Southwest show how integrated management works in the real world. A century of fire suppression created a system-wide crisis, threatening water, wildlife, and communities. The solution required a unified strategy focused on restoring the key ecological process of fire.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                <div class="bg-white rounded-lg shadow-lg p-6 h-full border-t-8 border-red-500">
+                    <h3 class="text-3xl font-bold text-center mb-4">Problem: Unhealthy, Over-Dense Forest</h3>
+                    <div class="text-center mb-4">
+                        <span class="text-8xl">🌲🌳🌲</span>
+                        <span class="text-8xl">🌳🌲🌳</span>
+                        <span class="text-8xl">🌲🌳🌲</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        <li>A century of fire suppression led to dense thickets of small trees.</li>
+                        <li>"Ladder fuels" allow fire to climb into the canopy, causing catastrophic crown fires.</li>
+                        <li><strong>Watershed Risk:</strong> Severe fires bake the soil, leading to massive erosion and polluted water.</li>
+                        <li><strong>Wildlife Risk:</strong> Crown fires destroy habitat for species like the Abert's squirrel, which needs mature pines.</li>
+                        <li><strong>Community Risk:</strong> Severe wildfires pose an existential threat to nearby homes and towns.</li>
+                    </ul>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-6 h-full border-t-8 border-green-500">
+                    <h3 class="text-3xl font-bold text-center mb-4">Solution: Restored, Resilient Forest</h3>
+                     <div class="text-center mb-4">
+                        <span class="text-8xl">🌲</span>
+                        <span class="text-5xl opacity-50">🌳</span>
+                        <span class="text-8xl">🌲</span>
+                        <span class="text-5xl opacity-50">🌳</span>
+                        <span class="text-8xl">🌲</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        <li>An integrated strategy of **ecological thinning** and **prescribed fire**.</li>
+                        <li>Thinning removes ladder fuels, while prescribed fires clean up surface fuels.</li>
+                        <li><strong>Watershed Benefit:</strong> Reduced risk of severe fire protects soil and water quality.</li>
+                        <li><strong>Wildlife Benefit:</strong> Thinning is done in a mosaic pattern, leaving clumps of trees for squirrel habitat while improving the overall forest health.</li>
+                        <li><strong>Recreation/Community Benefit:</strong> A safer, more resilient forest for people to enjoy.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const navButtons = document.querySelectorAll('.nav-button');
+            const sections = document.querySelectorAll('.content-section');
+
+            function switchTab(targetId) {
+                navButtons.forEach(button => {
+                    button.classList.toggle('active', button.dataset.target === targetId);
+                });
+                sections.forEach(section => {
+                    section.classList.toggle('active', section.id === targetId);
+                });
+            }
+
+            document.getElementById('nav-container').addEventListener('click', (e) => {
+                if (e.target.matches('.nav-button')) {
+                    switchTab(e.target.dataset.target);
+                }
+            });
+
+            // Watershed Section Logic
+            const bmpTabs = document.querySelectorAll('.bmp-tab');
+            const bmpContents = document.querySelectorAll('.bmp-content');
+
+            bmpTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    bmpTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    const targetId = tab.dataset.tab;
+                    bmpContents.forEach(content => {
+                        content.classList.toggle('hidden', content.id !== targetId);
+                        content.classList.toggle('active', content.id === targetId);
+                    });
+                });
+            });
+
+
+            // Wildlife Section Logic
+            const wildlifeData = {
+                early: {
+                    labels: ['Clearcut', 'Shelterwood', 'Thinning', 'Single-Tree'],
+                    data: [95, 70, 40, 5],
+                    description: {
+                        title: 'Early-Successional Species',
+                        text: 'These species thrive in the dense cover and abundant forage of young forests. Clearcutting is the most effective tool, resetting the forest to its earliest stage, creating a flush of grasses, forbs, and shrubs perfect for food and cover.'
+                    }
+                },
+                interior: {
+                    labels: ['Clearcut', 'Shelterwood', 'Thinning', 'Single-Tree'],
+                    data: [5, 30, 60, 95],
+                    description: {
+                        title: 'Mature, Interior-Forest Species',
+                        text: 'These species need continuous canopy cover and avoid open edges. Single-tree selection is ideal, as it maintains the mature forest structure, creating only very small gaps and preserving the interior habitat conditions they require.'
+                    }
+                },
+                generalist: {
+                    labels: ['Clearcut', 'Shelterwood', 'Thinning', 'Single-Tree'],
+                    data: [30, 80, 90, 70],
+                     description: {
+                        title: 'Generalists & Mast-Lovers',
+                        text: 'These adaptable species benefit from a mix of conditions. Thinning is highly effective as it opens the canopy to stimulate understory growth (forage) while allowing the remaining trees to grow larger and produce more hard mast (acorns, nuts).'
+                    }
+                },
+                fire: {
+                    labels: ['Prescribed Burn', 'Thinning + Burn', 'Clearcut', 'No Action'],
+                    data: [85, 95, 20, 5],
+                     description: {
+                        title: 'Fire-Adapted Species',
+                        text: 'These species depend on the unique, open habitat created by frequent, low-intensity fire. A combination of thinning to reduce fuel loads followed by prescribed burning is the most effective way to restore and maintain this habitat structure.'
+                    }
+                },
+                 cavity: {
+                    labels: ['Snag/DWD Retention', 'Thinning', 'Single-Tree', 'Clearcut'],
+                    data: [100, 70, 80, 20],
+                    description: {
+                        title: 'Cavity-Nesting Species',
+                        text: 'This group depends on dead trees (snags) and downed logs. The single most important practice is explicitly retaining snags and downed woody debris (DWD) during ANY operation. Mature stands managed with thinning or selection tend to provide more of this structure.'
+                    }
+                 }
+            };
+
+            const wildlifeChartCtx = document.getElementById('wildlifeChart').getContext('2d');
+            let wildlifeChart = new Chart(wildlifeChartCtx, {
+                type: 'bar',
+                data: {
+                    labels: wildlifeData.early.labels,
+                    datasets: [{
+                        label: 'Habitat Suitability',
+                        data: wildlifeData.early.data,
+                        backgroundColor: '#4A6C4A',
+                        borderColor: '#385338',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Relative Suitability (%)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                           display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Suitability: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const wildlifeSelector = document.getElementById('wildlife-selector');
+            const wildlifeDescriptionDiv = document.getElementById('wildlife-description');
+            wildlifeSelector.addEventListener('change', (e) => {
+                const selectedGuild = e.target.value;
+                const newData = wildlifeData[selectedGuild];
+                wildlifeChart.data.labels = newData.labels;
+                wildlifeChart.data.datasets[0].data = newData.data;
+                wildlifeChart.update();
+
+                wildlifeDescriptionDiv.innerHTML = `
+                    <h4 class="font-bold text-lg mb-2">${newData.description.title}</h4>
+                    <p class="text-gray-600">${newData.description.text}</p>
+                `;
+            });
+            
+            // Recreation Section Logic
+            const rosData = {
+                primitive: {
+                    title: "Primitive",
+                    color: "#166534",
+                    content: `
+                        <p><strong>Physical:</strong> Highly remote (>5 miles from roads), unmodified environment. Access by trail or cross-country only.</p>
+                        <p><strong>Social:</strong> Very low user density. High chance for solitude. Encounters with others are rare.</p>
+                        <p><strong>Managerial:</strong> Management is minimal and subtle. No facilities are provided.</p>`
+                },
+                "semi-primitive-nm": {
+                    title: "Semi-Primitive Non-Motorized",
+                     color: "#15803d",
+                    content: `
+                        <p><strong>Physical:</strong> Remote (0.5-5 miles from roads), predominantly natural-appearing. No motorized use.</p>
+                        <p><strong>Social:</strong> Low user density. Good chance for solitude. Encounters are occasional.</p>
+                        <p><strong>Managerial:</strong> Low level of management. Minimal, rustic facilities for resource protection only.</p>`
+                },
+                "semi-primitive-m": {
+                    title: "Semi-Primitive Motorized",
+                     color: "#22c55e",
+                    content: `
+                        <p><strong>Physical:</strong> Remote, but accessible by primitive roads or trails. Modifications are small-scale.</p>
+                        <p><strong>Social:</strong> Low to moderate user density. Encounters expected on travel routes.</p>
+                        <p><strong>Managerial:</strong> Management presence is low, but regulations may be posted. Rustic facilities.</p>`
+                },
+                "roaded-natural": {
+                    title: "Roaded Natural",
+                     color: "#facc15",
+                    content: `
+                        <p><strong>Physical:</strong> Easy access via passenger car roads. Within 0.5 miles of roads. Modifications are readily apparent.</p>
+                        <p><strong>Social:</strong> Moderate user density. Frequent encounters are expected.</p>
+                        <p><strong>Managerial:</strong> Management is regular and obvious. Facilities for visitor comfort are common.</p>`
+                },
+                rural: {
+                    title: "Rural",
+                    color: "#fb923c",
+                    content: `
+                        <p><strong>Physical:</strong> Very easy access on high-standard roads. Landscape is substantially modified (e.g., pastoral).</p>
+                        <p><strong>Social:</strong> Moderate to high user density. Encounters are frequent and expected.</p>
+                        <p><strong>Managerial:</strong> Management is intensive and highly visible. Complex facilities are common.</p>`
+                },
+                urban: {
+                    title: "Urban",
+                    color: "#9ca3af",
+                    content: `
+                        <p><strong>Physical:</strong> Immediate access within city limits. Landscape is dominated by human structures.</p>
+                        <p><strong>Social:</strong> Very high user density. Crowds are expected.</p>
+                        <p><strong>Managerial:</strong> Management is intensive and formalized. Highly developed facilities are the focus.</p>`
+                }
+            };
+            
+            const rosContainer = document.getElementById('ros-container');
+            const rosDetailsDiv = document.getElementById('ros-details');
+            const rosSegments = document.querySelectorAll('.ros-segment');
+
+            function updateRosDetails(rosClass) {
+                const data = rosData[rosClass];
+                rosDetailsDiv.innerHTML = `
+                    <h3 class="text-2xl font-bold mb-3" style="color:${data.color};">${data.title}</h3>
+                    <div class="space-y-2 text-gray-700">${data.content}</div>`;
+
+                rosSegments.forEach(seg => {
+                   seg.classList.remove('active');
+                   if (seg.id === `ros-${rosClass}`) {
+                       seg.classList.add('active');
+                   }
+                });
+            }
+
+            rosContainer.addEventListener('click', (e) => {
+                const segment = e.target.closest('.ros-segment');
+                if (segment) {
+                    const rosClass = segment.id.replace('ros-', '');
+                    updateRosDetails(rosClass);
+                }
+            });
+
+            // Initial load states
+            switchTab('intro');
+            updateRosDetails('primitive');
+
+        });
+    </script>
+</body>
+</html>
