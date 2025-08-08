@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tamarisk on the Gila River: An Interactive Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Desert Neutrals -->
+    <!-- Application Structure Plan: A thematic, single-page scrolling application. The structure is designed to tell a story, guiding the user from understanding the invasive species itself, to debunking the central "water myth," exploring the true impact of density, understanding the cascading ecological consequences, navigating the complex management paradox, and finally, seeing the path toward restoration. This non-linear, thematic approach is chosen over a direct report summary to make the dense, academic information more digestible and engaging for a broader audience. Key data points are visualized in interactive charts and prominent stat cards to highlight the most critical findings. -->
+    <!-- Visualization & Content Choices: 
+        1. Water Use (ET): Report data on evapotranspiration rates. Goal: Compare & Debunk Myth. Viz: Interactive Bar Chart (Chart.js). Interaction: Hover tooltips. Justification: Directly visualizes the core quantitative comparison between Tamarisk and native species, which is more impactful than a static table.
+        2. Stand Density: Report data on stems/acre and canopy cover. Goal: Inform & Contrast. Viz: Side-by-side large statistic cards. Interaction: None needed; visual impact is key. Justification: Effectively highlights the extreme difference between healthy and degraded river sections, which is a central theme.
+        3. Ecological Impacts: Report info on geomorphic changes, biodiversity loss, fire risk. Goal: Organize & Inform. Viz: Icon-driven 3-column grid with expandable text. Interaction: Click to expand details. Justification: Breaks down complex topics into clean, manageable chunks, avoiding user overload.
+        4. Management Paradox: Report info on the flycatcher/beetle conflict. Goal: Explain Relationships. Viz: Flowchart-style diagram using HTML/Tailwind. Interaction: Subtle hover effects. Justification: Visually maps out the complex, cyclical nature of the management problem, enhancing comprehension.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF7;
+            color: #4A4A4A;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 450px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s ease;
+        }
+        .nav-link:hover {
+            color: #A97C50;
+        }
+        .stat-card {
+            background-color: #F5F1E9;
+            border-left: 5px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+        }
+        .stat-card-healthy { border-color: #5A8B77; }
+        .stat-card-degraded { border-color: #C76D5C; }
+        .icon-card {
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+        .icon-card:hover {
+            background-color: #EFEAE2;
+            transform: scale(1.03);
+        }
+        .details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+        }
+        .details.open {
+            max-height: 500px;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-[#A97C50]">Gila River's Tamarisk</h1>
+            <div class="hidden md:flex space-x-6 text-sm font-medium">
+                <a href="#invader" class="nav-link">The Invader</a>
+                <a href="#water" class="nav-link">The Water Myth</a>
+                <a href="#density" class="nav-link">Density</a>
+                <a href="#impacts" class="nav-link">Impacts</a>
+                <a href="#paradox" class="nav-link">The Paradox</a>
+                <a href="#restoration" class="nav-link">Restoration</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden text-2xl">☰</button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden bg-white py-2">
+            <a href="#invader" class="block text-center py-2 text-sm nav-link">The Invader</a>
+            <a href="#water" class="block text-center py-2 text-sm nav-link">The Water Myth</a>
+            <a href="#density" class="block text-center py-2 text-sm nav-link">Density</a>
+            <a href="#impacts" class="block text-center py-2 text-sm nav-link">Impacts</a>
+            <a href="#paradox" class="block text-center py-2 text-sm nav-link">The Paradox</a>
+            <a href="#restoration" class="block text-center py-2 text-sm nav-link">Restoration</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="text-center py-16 md:py-24 px-6 bg-[#F5F1E9]">
+            <div class="container mx-auto">
+                <h2 class="text-4xl md:text-6xl font-extrabold text-[#A97C50] tracking-tight">An Engineered Crisis</h2>
+                <p class="mt-4 md:mt-6 max-w-3xl mx-auto text-lg md:text-xl text-gray-600">The invasion of Tamarisk on the Gila River is more than a weed problem. It's a story of how human changes to a river created the perfect home for an invader, with complex consequences for water, wildlife, and safety.</p>
+            </div>
+        </section>
+
+        <!-- The Invader Section -->
+        <section id="invader" class="py-16 md:py-24 px-6">
+            <div class="container mx-auto">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold">Profile of an Invader</h3>
+                    <p class="mt-3 max-w-2xl mx-auto text-gray-600">Tamarisk, or saltcedar, didn't just outcompete native plants; it thrived in an ecosystem we fundamentally changed. Its success comes from a powerful combination of adaptations.</p>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center icon-card">
+                        <div class="text-4xl mb-4">🧂</div>
+                        <h4 class="font-bold text-lg mb-2">Salt Tolerance</h4>
+                        <p class="text-sm text-gray-600">It excretes salt through its leaves, making the soil toxic for native plants like cottonwood and willow, effectively poisoning its competition.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center icon-card">
+                        <div class="text-4xl mb-4">💧</div>
+                        <h4 class="font-bold text-lg mb-2">Deep Roots</h4>
+                        <p class="text-sm text-gray-600">Its taproot can reach 100 feet deep, tapping into groundwater far below the reach of native species, ensuring its survival even on dry terraces.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center icon-card">
+                        <div class="text-4xl mb-4">🌱</div>
+                        <h4 class="font-bold text-lg mb-2">Rapid Reproduction</h4>
+                        <p class="text-sm text-gray-600">A single tree produces hundreds of thousands of seeds annually, and broken stems can easily take root, enabling explosive colonization.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center icon-card">
+                        <div class="text-4xl mb-4">🔥</div>
+                        <h4 class="font-bold text-lg mb-2">Fire Adapted</h4>
+                        <p class="text-sm text-gray-600">It creates high fire risk with its dry litter. After a fire, it resprouts vigorously while less-adapted native trees are often killed.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- The Water Myth Section -->
+        <section id="water" class="py-16 md:py-24 px-6 bg-[#F5F1E9]">
+            <div class="container mx-auto">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold">The Water Myth: A Shift in Science</h3>
+                    <p class="mt-3 max-w-3xl mx-auto text-gray-600">For decades, tamarisk was seen as a "water guzzler," justifying costly removal projects. Modern science tells a more nuanced story. The issue isn't that individual tamarisk trees are exceptionally thirsty, but that their density changes the entire landscape.</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="etChart"></canvas>
+                </div>
+                 <p class="text-center mt-4 text-sm text-gray-500">Hover over the bars to see details. ET = Evapotranspiration, the total water lost from plants and soil.</p>
+            </div>
+        </section>
+
+        <!-- Density Section -->
+        <section id="density" class="py-16 md:py-24 px-6">
+            <div class="container mx-auto">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold">Density is Destiny</h3>
+                    <p class="mt-3 max-w-3xl mx-auto text-gray-600">The real hydrological impact of tamarisk comes from its ability to form dense, impenetrable thickets. Stand density is a direct indicator of the river's health: where the river is degraded, tamarisk density explodes.</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                    <div class="stat-card stat-card-degraded p-8 rounded-lg">
+                        <h4 class="text-lg font-semibold text-gray-700">Degraded River Reach</h4>
+                        <p class="text-5xl md:text-6xl font-extrabold text-[#C76D5C] my-2">4,000</p>
+                        <p class="font-medium text-gray-600">Stems per Acre</p>
+                        <p class="text-sm mt-3 text-gray-500">In downstream, regulated areas, tamarisk forms "impenetrable thickets," choking the river.</p>
+                    </div>
+                    <div class="stat-card stat-card-healthy p-8 rounded-lg">
+                        <h4 class="text-lg font-semibold text-gray-700">Healthy River Reach</h4>
+                        <p class="text-5xl md:text-6xl font-extrabold text-[#5A8B77] my-2">&lt;2%</p>
+                        <p class="font-medium text-gray-600">Canopy Cover</p>
+                        <p class="text-sm mt-3 text-gray-500">In upstream, less-disturbed reaches, tamarisk is a minor plant, unable to dominate the ecosystem.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ecological Impacts Section -->
+        <section id="impacts" class="py-16 md:py-24 px-6 bg-[#F5F1E9]">
+            <div class="container mx-auto">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold">The Ripple Effect: Beyond Water Use</h3>
+                    <p class="mt-3 max-w-2xl mx-auto text-gray-600">The tamarisk invasion reshapes the entire riparian corridor, creating a cascade of ecological problems.</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="text-center p-6 bg-white rounded-lg shadow-md">
+                        <div class="text-4xl mb-4">🌊</div>
+                        <h4 class="font-bold text-lg mb-2">Increased Flood Risk</h4>
+                        <p class="text-sm text-gray-600">Dense stands trap sediment, narrowing the river channel. This forces floodwaters into a tighter space, increasing their velocity and height, threatening nearby farms and infrastructure.</p>
+                    </div>
+                    <div class="text-center p-6 bg-white rounded-lg shadow-md">
+                        <div class="text-4xl mb-4">🍂</div>
+                        <h4 class="font-bold text-lg mb-2">Biodiversity Loss</h4>
+                        <p class="text-sm text-gray-600">Monocultures of tamarisk displace native plants and offer poor habitat. The salty leaf litter supports far fewer insects, disrupting the entire food web that birds, lizards, and fish depend on.</p>
+                    </div>
+                    <div class="text-center p-6 bg-white rounded-lg shadow-md">
+                        <div class="text-4xl mb-4">🔥</div>
+                        <h4 class="font-bold text-lg mb-2">Catastrophic Wildfires</h4>
+                        <p class="text-sm text-gray-600">Tamarisk accumulates vast amounts of dead, tinder-dry fuel. This leads to more frequent and intense wildfires that destroy habitat and pose a danger to human communities.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Management Paradox Section -->
+        <section id="paradox" class="py-16 md:py-24 px-6">
+            <div class="container mx-auto">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold">The Management Maze</h3>
+                    <p class="mt-3 max-w-3xl mx-auto text-gray-600">Managing tamarisk is not simple. A classic conservation paradox has emerged, creating a chain of unintended consequences where every major action involves a difficult trade-off.</p>
+                </div>
+                <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-0 text-center">
+                    <div class="p-4 bg-white rounded-lg shadow-md w-60">
+                        <h5 class="font-bold">The Problem</h5>
+                        <p class="text-sm">Tamarisk invades degraded river.</p>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-400 mx-4 transform md:rotate-0 rotate-90">→</div>
+                    <div class="p-4 bg-white rounded-lg shadow-md w-60">
+                        <h5 class="font-bold">The Solution?</h5>
+                        <p class="text-sm">Tamarisk Leaf Beetle is introduced for biocontrol.</p>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-400 mx-4 transform md:rotate-0 rotate-90">→</div>
+                    <div class="p-4 bg-red-100 border-l-4 border-red-500 rounded-lg shadow-md w-60">
+                        <h5 class="font-bold text-red-800">New Problem</h5>
+                        <p class="text-sm text-red-700">Beetle destroys nesting habitat for the endangered Southwestern Willow Flycatcher.</p>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-400 mx-4 transform md:rotate-0 rotate-90">→</div>
+                    <div class="p-4 bg-orange-100 border-l-4 border-orange-500 rounded-lg shadow-md w-60">
+                        <h5 class="font-bold text-orange-800">Third Problem</h5>
+                        <p class="text-sm text-orange-700">Defoliated tamarisk creates massive, tinder-dry fuel loads, increasing wildfire risk.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Restoration Section -->
+        <section id="restoration" class="py-16 md:py-24 px-6 bg-[#F5F1E9]">
+            <div class="container mx-auto">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold">A Framework for Restoration</h3>
+                    <p class="mt-3 max-w-3xl mx-auto text-gray-600">There is no silver bullet. Effective management requires moving beyond simple plant removal to a holistic, process-based approach tailored to specific goals and locations.</p>
+                </div>
+                <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h4 class="font-bold text-lg mb-2 text-[#A97C50]">Prioritize by Risk</h4>
+                        <p class="text-sm text-gray-600">Target the highest-density areas first to mitigate the most severe flood and fire risks to human communities.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h4 class="font-bold text-lg mb-2 text-[#A97C50]">Integrate Habitat Needs</h4>
+                        <p class="text-sm text-gray-600">Coordinate tamarisk removal with flycatcher recovery plans, potentially clearing areas only after new native habitat is established.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h4 class="font-bold text-lg mb-2 text-[#A97C50]">Focus on Process, Not Plants</h4>
+                        <p class="text-sm text-gray-600">Where possible, restore elements of the natural river flow. Managed floods can create conditions that favor native plants, reducing long-term reliance on costly removal.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h4 class="font-bold text-lg mb-2 text-[#A97C50]">Define Site-Specific Goals</h4>
+                        <p class="text-sm text-gray-600">Tailor actions to goals. If water conservation is key, replace tamarisk with low-water-use grasses. If wildlife is the priority, establish diverse native forests.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-[#4A4A4A] text-white py-8">
+        <div class="container mx-auto text-center text-sm">
+            <p>This interactive report synthesizes findings from ecohydrological research on the Gila River.</p>
+            <p class="mt-2 opacity-70">Data sourced from "Water Consumption and Stand Density of Invasive Tamarisk (Tamarix spp.) in the Gila River Riparian Corridor".</p>
+        </div>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const etData = {
+        labels: [
+            'Tamarisk (Historical Estimate)', 
+            'Tamarisk (Modern Field Study)', 
+            'Native Cottonwood-Willow', 
+            'Native Grasses/Shrubs'
+        ],
+        datasets: [{
+            label: 'Annual Water Use (ET in feet/year)',
+            data: [7.5, 3.25, 3.5, 1.5],
+            backgroundColor: [
+                'rgba(217, 119, 6, 0.6)', 
+                'rgba(169, 124, 80, 0.7)',
+                'rgba(90, 139, 119, 0.7)',
+                'rgba(130, 158, 145, 0.7)'
+            ],
+            borderColor: [
+                'rgb(217, 119, 6)',
+                'rgb(169, 124, 80)',
+                'rgb(90, 139, 119)',
+                'rgb(130, 158, 145)'
+            ],
+            borderWidth: 1,
+            barPercentage: 0.6,
+            categoryPercentage: 0.7
+        }]
+    };
+
+    const etConfig = {
+        type: 'bar',
+        data: etData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Comparative Annual Water Use (Evapotranspiration)',
+                    font: {
+                        size: 16,
+                        family: 'Inter',
+                        weight: '600'
+                    },
+                    color: '#4A4A4A',
+                    padding: {
+                        bottom: 20
+                    }
+                },
+                tooltip: {
+                    backgroundColor: '#4A4A4A',
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 12 },
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += context.parsed.y.toFixed(2) + ' feet/year';
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Feet per Year',
+                        font: {
+                            size: 12
+                        },
+                        color: '#6b7280'
+                    },
+                    grid: {
+                        color: '#e5e7eb'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 11
+                        },
+                        color: '#4A4A4A'
+                    }
+                }
+            }
+        }
+    };
+
+    const etChartCtx = document.getElementById('etChart').getContext('2d');
+    new Chart(etChartCtx, etConfig);
+
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileMenuButton.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+    });
+
+    document.querySelectorAll('#mobile-menu a').forEach(link => {
+        link.addEventListener('click', () => {
+            mobileMenu.classList.add('hidden');
+        });
+    });
+});
+</script>
+
+</body>
+</html>
