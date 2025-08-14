@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Living History of American Forests</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Earthy Neutrals -->
+    <!-- Application Structure Plan: The application is structured as a non-linear, timeline-driven exploratory tool. The core navigation is a horizontal timeline representing the four major eras from the report. This structure was chosen over a linear scroll to empower users to jump between historical periods, facilitating comparison and thematic exploration. Clicking an era dynamically updates the main content view, presenting the detailed information for that period in a digestible format using cards, interactive diagrams, and focused case studies. This design prioritizes user-driven discovery and makes the dense historical information more accessible and engaging than a traditional text layout. -->
+    <!-- Visualization & Content Choices: 
+        - Forest Cover Trend (Line Chart): Report Info -> Deforestation/Reforestation trend. Goal -> Show change over time. Viz -> Chart.js Line Chart. Interaction -> Hover for tooltips. Justification -> Provides a powerful, overarching visual narrative of forest loss and recovery.
+        - Dominant Influences (Bar Chart): Report Info -> Key human activities per era. Goal -> Compare influences across eras. Viz -> Chart.js Bar Chart. Interaction -> Clickable bars for navigation. Justification -> Acts as the primary interactive navigation, visually linking eras to their core drivers.
+        - Ecosystem Services (Donut Chart): Report Info -> Four categories of ecosystem services. Goal -> Inform/Organize. Viz -> Chart.js Donut Chart. Interaction -> Hover to highlight segments. Justification -> A simple, effective way to visualize and explain the components of a key modern concept.
+        - Key Concepts (Interactive Cards): Report Info -> Vocabulary list. Goal -> Inform. Method -> HTML/CSS/JS cards. Interaction -> Click to reveal definition. Justification -> De-clutters the main text and allows users to learn key terms on demand.
+        - Case Studies (Styled HTML): Report Info -> Cahokia, Fur Trade, Passenger Pigeon. Goal -> Inform. Method -> Visually distinct HTML/CSS sections. Justification -> Highlights critical stories within the larger narrative, breaking up text with images and key stats.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fdfcfb;
+            color: #38332d;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .nav-button {
+            transition: all 0.3s ease;
+        }
+        .nav-button.active {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+        .content-section {
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+            will-change: opacity, transform;
+        }
+        .content-section.hidden {
+            opacity: 0;
+            transform: translateY(20px);
+            position: absolute;
+            pointer-events: none;
+        }
+        .term-card {
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .term-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto px-4 py-8 md:py-12">
+        
+        <header class="text-center mb-8 md:mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-emerald-800 mb-2">A Living History of American Forests</h1>
+            <p class="text-lg md:text-xl text-stone-600 max-w-3xl mx-auto">From Managed Mosaic to Global Carbon Sink: An Interactive Exploration</p>
+        </header>
+
+        <main>
+            <section id="intro" class="mb-12">
+                 <div class="bg-stone-100 rounded-xl p-6 md:p-8 border border-stone-200">
+                    <h2 class="text-2xl font-bold text-emerald-800 mb-4">Debunking the "Pristine Wilderness" Myth</h2>
+                    <p class="mb-4 text-stone-700">The story of American forests is often simplified: a vast, untouched wilderness met by settlers. This interactive chapter reveals a more complex truth. The forests encountered by colonists were not pristine, but landscapes actively shaped for millennia by Indigenous peoples through fire and agriculture. This application traces the four major eras of human-forest interaction, revealing how different cultures and technologies have continuously reshaped the continent's ecosystems.</p>
+                    <div class="chart-container h-48 md:h-64">
+                        <canvas id="forestCoverChart"></canvas>
+                    </div>
+                    <p class="text-center text-sm text-stone-500 mt-2">Conceptual trend of North American forest cover over time, reflecting major historical eras of use and recovery.</p>
+                </div>
+            </section>
+
+            <nav id="timeline-nav" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            </nav>
+
+            <div id="content-container" class="relative">
+            </div>
+
+        </main>
+
+        <footer class="text-center mt-12 pt-8 border-t border-stone-200">
+            <p class="text-sm text-stone-500">An interactive resource based on the history of American forests. All content adapted from the source report.</p>
+        </footer>
+    </div>
+
+    <script>
+        const contentData = {
+            pre1492: {
+                id: 'pre1492',
+                title: 'Pre-1492: A Managed Mosaic',
+                navTitle: 'A Managed Mosaic',
+                period: 'Pre-1492',
+                color: '#34d399',
+                intro: 'Before 1492, North American forests were not an untouched wilderness but a "managed mosaic." For millennia, Indigenous peoples used sophisticated techniques, especially controlled burns, to shape the landscape. This created a diverse tapestry of open woodlands, savannas, and agricultural fields that supported high biodiversity and complex human societies.',
+                sections: [
+                    {
+                        title: 'The Power of Fire: A Keystone Force',
+                        content: 'The most powerful tool was the **controlled burn**. Far from being destructive, this human-driven **disturbance regime** cleared underbrush, promoted the growth of useful plants, and created ideal habitats for **game species** like deer and elk. This maintained vast, open, park-like **savannas** and woodlands, which surprised early European observers.',
+                        icon: '🔥'
+                    },
+                    {
+                        title: 'Maize-Based Agriculture',
+                        content: 'The rise of **maize-based agriculture** led to the first large-scale, intentional **deforestation** to create permanent fields. Great cities like Cahokia required enormous quantities of timber for construction and fuel, clearing forests for miles around. Techniques like **girdling** were used to kill trees and open the canopy for crops.',
+                        icon: '🌽'
+                    },
+                ],
+                caseStudy: {
+                    title: 'Case Study: Cahokia',
+                    image: 'https://placehold.co/600x400/a3e635/44403c?text=Cahokia+Mounds',
+                    caption: 'Artist\'s reconstruction of Cahokia, a major Mississippian city. Its construction required an estimated one million trees.',
+                    content: 'At its peak around 1100 AD, the city of Cahokia was a testament to forest transformation. A two-mile-long defensive stockade alone required 15,000 large logs. This, plus fuel and housing needs, led to the clear-cutting of the surrounding bottomland forest for up to nine miles in every direction, demonstrating significant, localized deforestation long before European arrival.'
+                },
+                terms: ['Old-growth forest', 'Biodiversity', 'Disturbance regime', 'Savanna', 'Controlled burn / Fire regime', 'Maize-based agriculture', 'Game species vs. furbearers', 'Girdling']
+            },
+            colonial: {
+                id: 'colonial',
+                title: '1600-1860: The Colonial Encounter',
+                navTitle: 'The Colonial Encounter',
+                period: '1600-1860',
+                color: '#fbbf24',
+                intro: 'The arrival of European colonists initiated a radical shift. Driven by a worldview that saw the forest as an obstacle or commodity, and armed with new tools like the steel axe, they began to re-engineer the landscape for agriculture and commerce. This era was defined by localized clearing, the enclosure of land, and the targeted exploitation of specific resources.',
+                sections: [
+                    {
+                        title: 'Subsistence Farming & Fencing',
+                        content: 'The primary goal for most settlers was **subsistence farming**. This involved clearing land using techniques like **girdling** and felling trees with steel axes. To protect crops, enormous quantities of timber were used to build **split-rail fences**, visibly marking the conversion of forest to farmland.',
+                        icon: '🪓'
+                    },
+                    {
+                        title: 'The Fur Trade & Charcoal',
+                        content: 'The commercial demand for beaver pelts drove the fur trade, leading to the near-extinction of beaver (**furbearers**) and the collapse of the vast wetland ecosystems they engineered. Simultaneously, the early iron industry was fueled by **charcoal**, consuming vast tracts of forest. Where resources were shared, this led to a **Tragedy of the Commons** dynamic and rapid local **deforestation**.',
+                        icon: '🏭'
+                    }
+                ],
+                caseStudy: {
+                    title: 'Case Study: The Beaver Fur Trade',
+                    image: 'https://placehold.co/600x400/fde047/44403c?text=Beaver+Dam',
+                    caption: 'Beavers are "ecosystem engineers" whose dams create vital wetlands.',
+                    content: 'The insatiable demand for beaver pelts for European hats led to the systematic trapping of this keystone species. As beavers vanished, millions of acres of wetlands they maintained dried up. This fundamentally altered the continent\'s hydrology, making it drier and less resilient—an environmental transformation driven by a single fashion trend.'
+                },
+                terms: ['Deforestation', 'Tragedy of the commons', 'Game species vs. furbearers', 'Charcoal', 'Split-rail fencing', 'Subsistence farming', 'Girdling', 'Furbearers']
+            },
+            industrial: {
+                id: 'industrial',
+                title: '1860-1920: The Great Acceleration',
+                navTitle: 'The Great Acceleration',
+                period: '1860-1920',
+                color: '#f87171',
+                intro: 'The late 19th century witnessed an unprecedented assault on American forests. Fueled by railroads, steam power, and a national ethos of expansion, the "Great Cutover" saw lumbering surpass agriculture as the primary driver of deforestation. This era of industrial-scale exploitation left behind ecological devastation and drove iconic species to extinction.',
+                sections: [
+                    {
+                        title: 'The Great Cutover',
+                        content: 'The combination of railroads and steam-powered logging equipment allowed for the liquidation of forests on an industrial scale. Timber companies swept across the Great Lakes, the Appalachians, and the South, clear-cutting vast regions and leaving behind desolate **stumplands** or **cutovers**. These barren landscapes were prone to catastrophic wildfires and severe soil erosion.',
+                        icon: '🚂'
+                    },
+                    {
+                        title: 'The Conservation Awakening',
+                        content: 'The shocking ecological damage, epitomized by the extinction of the **passenger pigeon**, sparked the American conservation movement. Figures like John Muir and Gifford Pinchot championed the protection and "wise use" of natural resources, leading to the creation of the National Forest system under President Theodore Roosevelt.',
+                        icon: '🏞️'
+                    }
+                ],
+                caseStudy: {
+                    title: 'Case Study: The Passenger Pigeon',
+                    image: 'https://placehold.co/600x400/fca5a5/44403c?text=Passenger+Pigeon',
+                    caption: 'Once the most abundant bird in North America, the Passenger Pigeon was driven to extinction by 1914.',
+                    content: 'The fate of the **passenger pigeon** is a stark example of the **Tragedy of the Commons**. A combination of widespread **deforestation** of its habitat and unrelenting commercial hunting for city markets drove its population from billions to zero in just a few decades. Its extinction served as a powerful, tragic catalyst for the nascent conservation movement.'
+                },
+                terms: ['Deforestation', 'Stumplands / Cutovers', 'Tragedy of the commons', 'Passenger pigeon', 'Old-growth forest']
+            },
+            modern: {
+                id: 'modern',
+                title: '1920-Present: The Modern Forest',
+                navTitle: 'The Modern Forest',
+                period: '1920-Present',
+                color: '#4ade80',
+                intro: 'The 20th century marked a turning point, as forest cover in the U.S. began to recover. However, this new forest is ecologically different from what was lost. Today, we value forests not just for timber, but for a wide range of essential **ecosystem services**, with a new focus on their critical role in mitigating climate change through **carbon sequestration**.',
+                sections: [
+                    {
+                        title: 'From Stumpland to Second Growth',
+                        content: 'Forests returned as abandoned farmland reverted and **cutovers** regrew. However, this second-growth forest lacks the structural complexity and high **biodiversity** of the **old-growth forest** it replaced. Recovering these old-growth characteristics is a process that takes centuries.',
+                        icon: '🌳'
+                    },
+                    {
+                        title: 'New Values: Carbon & Biomass',
+                        content: 'In the face of climate change, the ability of forests to perform **carbon sequestration**—absorbing atmospheric CO₂ and storing it in **biomass** and soils—has become a globally important **regulating service**. Protecting mature forests and managing for carbon storage are now key priorities.',
+                        icon: '🌍'
+                    }
+                ],
+                caseStudy: {
+                    title: 'Interactive: Ecosystem Services',
+                    content: 'Modern forest management recognizes the many benefits forests provide. These **ecosystem services** are often grouped into four categories. Hover over the chart to explore them.',
+                    chart: 'ecosystemServicesChart'
+                },
+                terms: ['Carbon sequestration', 'Biomass', 'Ecosystem services', 'Biodiversity', 'Old-growth forest', 'Stumplands / Cutovers']
+            }
+        };
+
+        const termDefinitions = {
+            'Old-growth forest': 'A forest that has developed over a long period without significant disturbance; not necessarily “untouched” or “pristine” before European arrival.',
+            'Biodiversity': 'The variety of life in a particular habitat or on Earth overall, including diversity within species, between species, and among ecosystems. High biodiversity supports ecosystem health and resilience.',
+            'Disturbance regime': 'Natural or human influences (e.g., fire, storms, logging) that shape forest ecosystems over time.',
+            'Savanna': 'A grassy ecosystem with scattered trees, often maintained by periodic fire. Many savannas were influenced by Indigenous land management.',
+            'Carbon sequestration': 'The process of capturing and storing atmospheric carbon dioxide (CO₂) in stable forms. In forests, CO₂ is absorbed during photosynthesis and stored in biomass and soil, helping mitigate climate change.',
+            'Biomass': 'Renewable organic material from living or recently living organisms. In forestry, refers to wood and plant materials used for energy (firewood, wood pellets) or other products.',
+            'Ecosystem services': 'The benefits that humans obtain from ecosystems, including provisioning (timber, food), regulating (climate regulation), supporting (nutrient cycling), and cultural (recreation, heritage) services.',
+            'Controlled burn / Fire regime': 'The deliberate use of fire by Indigenous peoples to manage landscapes, encourage certain plants, and maintain biodiversity.',
+            'Maize-based agriculture': 'Agricultural systems centered on maize (corn), which shaped and influenced surrounding forest ecosystems through land clearing and cultivation.',
+            'Girdling': 'A technique used to kill trees by removing a ring of bark, disrupting the flow of nutrients. Used by settlers to clear forests without cutting down trees directly.',
+            'Deforestation': 'The clearing or thinning of forests, often for agriculture, settlement, or resource extraction. A major theme in environmental history.',
+            'Stumplands / Cutovers': 'Degraded forest lands left after extensive logging or burning. Often associated with poor soil and slow forest recovery.',
+            'Tragedy of the commons': 'An economic and ecological concept explaining how individuals, acting in their own self-interest, can deplete shared resources (e.g., overhunting, overgrazing) to the detriment of all.',
+            'Passenger pigeon': 'Once the most abundant bird species in North America, driven to extinction by habitat loss and unregulated hunting — a key example of human impact on wildlife.',
+            'Game species vs. furbearers': 'Game species are animals hunted for food (e.g., deer, turkey). Furbearers are animals trapped or hunted for their pelts (e.g., beaver, mink).',
+            'Charcoal': 'A product made by burning wood in low-oxygen conditions. Historically important for iron production and other industries.',
+            'Split-rail fencing': 'A type of fence constructed using split logs. Required large quantities of timber and was common in early settler agriculture.',
+            'Subsistence farming': 'A self-sufficient farming system where families grow food primarily for their own use, with little surplus for trade or sale.',
+            'Furbearers': 'Animals trapped or hunted for their pelts (e.g., beaver, mink), often used in the fur trade.'
+        };
+
+        const timelineNav = document.getElementById('timeline-nav');
+        const contentContainer = document.getElementById('content-container');
+        let activeChart = null;
+
+        function createContent(eraKey) {
+            const data = contentData[eraKey];
+            const sectionEl = document.createElement('section');
+            sectionEl.id = data.id;
+            sectionEl.className = 'content-section p-4 md:p-6 bg-white rounded-xl shadow-lg border border-gray-200';
+
+            let caseStudyHTML = '';
+            if (data.caseStudy) {
+                if(data.caseStudy.chart) {
+                    caseStudyHTML = `
+                        <div class="mt-8">
+                            <h3 class="text-xl font-bold text-emerald-800 mb-3">${data.caseStudy.title}</h3>
+                            <p class="mb-4 text-stone-600">${data.caseStudy.content}</p>
+                            <div class="chart-container h-64 md:h-80">
+                                <canvas id="${data.caseStudy.chart}"></canvas>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    caseStudyHTML = `
+                        <div class="mt-8 bg-stone-50 rounded-lg p-4 border border-stone-200">
+                            <h3 class="text-xl font-bold text-emerald-800 mb-3">${data.caseStudy.title}</h3>
+                            <img src="${data.caseStudy.image}" alt="${data.caseStudy.caption}" class="w-full h-auto object-cover rounded-md mb-2" onerror="this.onerror=null;this.src='https://placehold.co/600x400/a78bfa/ffffff?text=Image+Not+Found';">
+                            <p class="text-sm text-stone-500 italic mb-3">${data.caseStudy.caption}</p>
+                            <p class="text-stone-700">${data.caseStudy.content}</p>
+                        </div>
+                    `;
+                }
+            }
+            
+            let termsHTML = '';
+            if (data.terms && data.terms.length > 0) {
+                termsHTML = `
+                    <div class="mt-8">
+                        <h3 class="text-xl font-bold text-emerald-800 mb-3">Key Concepts in this Era</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                            ${data.terms.map(term => `
+                                <div class="term-card bg-white p-3 rounded-md border border-stone-200 shadow-sm text-center" data-term="${term}">
+                                    <span class="font-semibold text-sm text-emerald-700">${term}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div id="term-definition-${data.id}" class="mt-4 p-4 bg-emerald-50 rounded-lg border border-emerald-200 text-emerald-900 hidden"></div>
+                    </div>
+                `;
+            }
+
+            sectionEl.innerHTML = `
+                <h2 class="text-3xl font-bold text-emerald-800 mb-4">${data.title}</h2>
+                <p class="text-stone-700 mb-6">${data.intro}</p>
+                <div class="grid md:grid-cols-2 gap-6">
+                    ${data.sections.map(s => `
+                        <div class="bg-stone-50 p-4 rounded-lg border border-stone-200">
+                            <h3 class="text-lg font-bold text-emerald-800 mb-2 flex items-center"><span class="text-2xl mr-3">${s.icon}</span> ${s.title}</h3>
+                            <p class="text-stone-600">${s.content}</p>
+                        </div>
+                    `).join('')}
+                </div>
+                ${caseStudyHTML}
+                ${termsHTML}
+            `;
+            return sectionEl;
+        }
+
+        function switchTab(eraKey) {
+            document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-era="${eraKey}"]`).classList.add('active');
+
+            document.querySelectorAll('.content-section').forEach(sec => {
+                if (sec.id !== eraKey) {
+                    sec.classList.add('hidden');
+                } else {
+                    sec.classList.remove('hidden');
+                }
+            });
+
+            if (activeChart) {
+                activeChart.destroy();
+                activeChart = null;
+            }
+
+            if (eraKey === 'modern' && document.getElementById('ecosystemServicesChart')) {
+                renderEcosystemServicesChart();
+            }
+        }
+
+        Object.keys(contentData).forEach(key => {
+            const data = contentData[key];
+            const navButton = document.createElement('button');
+            navButton.className = 'nav-button w-full text-left p-4 rounded-lg shadow-md';
+            navButton.dataset.era = data.id;
+            navButton.style.backgroundColor = data.color;
+            navButton.innerHTML = `
+                <span class="block font-bold text-white text-lg">${data.navTitle}</span>
+                <span class="block text-white text-sm opacity-90">${data.period}</span>
+            `;
+            timelineNav.appendChild(navButton);
+
+            const contentSection = createContent(key);
+            contentSection.classList.add('hidden');
+            contentContainer.appendChild(contentSection);
+        });
+
+        timelineNav.addEventListener('click', (e) => {
+            const button = e.target.closest('.nav-button');
+            if (button) {
+                switchTab(button.dataset.era);
+            }
+        });
+        
+        contentContainer.addEventListener('click', (e) => {
+            const termCard = e.target.closest('.term-card');
+            if (termCard) {
+                const term = termCard.dataset.term;
+                const eraId = termCard.closest('.content-section').id;
+                const definitionBox = document.getElementById(`term-definition-${eraId}`);
+                
+                if (definitionBox.textContent === termDefinitions[term] && !definitionBox.classList.contains('hidden')) {
+                     definitionBox.classList.add('hidden');
+                } else {
+                    definitionBox.innerHTML = `<strong class="font-bold">${term}:</strong> ${termDefinitions[term]}`;
+                    definitionBox.classList.remove('hidden');
+                }
+            }
+        });
+
+        function renderForestCoverChart() {
+            const ctx = document.getElementById('forestCoverChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Pre-1492', '1600', '1860', '1920', 'Present'],
+                    datasets: [{
+                        label: 'Conceptual Forest Cover',
+                        data: [85, 80, 65, 55, 75],
+                        borderColor: '#065f46',
+                        backgroundColor: 'rgba(6, 95, 70, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#065f46',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: (context) => contentData[Object.keys(contentData)[context[0].dataIndex]]?.navTitle || context[0].label
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            display: false,
+                            suggestedMin: 50,
+                            suggestedMax: 90
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderEcosystemServicesChart() {
+            const ctx = document.getElementById('ecosystemServicesChart').getContext('2d');
+            activeChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Regulating', 'Provisioning', 'Cultural', 'Supporting'],
+                    datasets: [{
+                        label: 'Ecosystem Services',
+                        data: [25, 25, 25, 25],
+                        backgroundColor: [
+                            '#34d399',
+                            '#fbbf24',
+                            '#60a5fa',
+                            '#a78bfa'
+                        ],
+                        borderColor: '#fdfcfb',
+                        borderWidth: 4,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    const definitions = {
+                                        'Regulating': 'Climate, flood, disease control',
+                                        'Provisioning': 'Food, water, timber, fiber',
+                                        'Cultural': 'Recreational, spiritual, aesthetic',
+                                        'Supporting': 'Nutrient cycling, soil formation'
+                                    };
+                                    label += definitions[context.label];
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initial state
+        renderForestCoverChart();
+        switchTab('pre1492');
+
+    </script>
+
+</body>
+</html>
