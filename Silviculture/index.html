@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Guide to Silviculture</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Earthy Neutrals -->
+    <!-- Application Structure Plan: The application abandons the linear structure of the source report for a thematic, four-part interactive journey: 1) 'Introduction' uses interactive pillars to explain the core triad of objectives. 2) 'The Toolkit' is the centerpiece, transforming the report's comparison table into a dynamic "System Selector" where users click a regeneration system (e.g., Clearcut) to see its characteristics and a radar chart visualizing its trade-offs across ecological, economic, and social factors. 3) 'The Practice' uses interactive diagrams to make abstract concepts like thinning tangible. 4) 'Case Study' turns the Ponderosa Pine stocking table into a practical tool with sliders for elevation and precipitation that output the recommended basal area. This task-oriented, interactive design prioritizes user exploration and comprehension of key silvicultural concepts and trade-offs over passive reading. -->
+    <!-- Visualization & Content Choices: 1. Triad of Objectives: Goal=Organize. Method=Interactive HTML pillars with JS click events. Justification=Makes the core framework memorable. 2. Regeneration System Comparison: Goal=Compare/Analyze. Method=Interactive radar chart (Chart.js) and dynamic text blocks updated via JS. Justification=Visually highlights the critical concept of trade-offs, which is central to the report but static in the source table. 3. Stand Development: Goal=Show change. Method=CSS/HTML timeline. Justification=Simple visualization of a key process. 4. Thinning Concept: Goal=Explain a process. Method=Interactive HTML/CSS diagram with a slider. Justification=Demonstrates the "paradox of thinning" more effectively than text alone. 5. Ponderosa Stocking Guide: Goal=Relate variables. Method=JS-powered sliders that look up data in an object. Justification=Turns a static data table into an interactive decision-support tool, simulating a real-world task. All visualizations use either HTML/CSS or Chart.js Canvas, confirming NO SVG/Mermaid. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .active-nav {
+            color: #166534;
+            font-weight: 600;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 280px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+                max-height: 400px;
+            }
+        }
+        .thinning-tree {
+            transition: all 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800">
+
+    <header class="bg-white/80 backdrop-blur-sm sticky top-0 z-50 border-b border-stone-200">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <h1 class="text-xl md:text-2xl font-bold text-green-900">An Interactive Guide to Silviculture</h1>
+                <nav class="hidden md:flex space-x-6 text-stone-600">
+                    <a href="#intro" class="hover:text-green-800">Introduction</a>
+                    <a href="#toolkit" class="hover:text-green-800">The Toolkit</a>
+                    <a href="#practice" class="hover:text-green-800">The Practice</a>
+                    <a href="#case-study" class="hover:text-green-800">Case Study</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 md:py-12">
+
+        <section id="intro" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-bold text-center mb-4 text-green-900">The Foundations of Silviculture</h2>
+            <p class="max-w-3xl mx-auto text-center text-stone-600 mb-12">
+                This section introduces the core philosophy of silviculture. It's not just about growing trees, but about balancing competing goals to manage forests sustainably. Here, you'll explore the three pillars that guide every decision a forester makes: ecology, economics, and society. Understanding this triad is the first step to understanding modern forest management.
+            </p>
+
+            <div class="grid md:grid-cols-3 gap-8 text-center">
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-green-600">
+                    <div class="text-5xl mb-4">🌳</div>
+                    <h3 class="text-xl font-semibold mb-2 text-green-800">Ecologically Feasible</h3>
+                    <p class="text-stone-600">Management must work with nature, not against it. This includes improving wildlife habitat, protecting water quality, restoring natural processes, and enhancing forest health and resilience to fire, insects, and disease.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-600">
+                    <div class="text-5xl mb-4">💰</div>
+                    <h3 class="text-xl font-semibold mb-2 text-blue-800">Economically Viable</h3>
+                    <p class="text-stone-600">Management must be financially sound. This involves producing timber and other wood products, generating revenue from non-timber products like mushrooms or pine straw, and ensuring predictable harvests over the long term.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-orange-600">
+                    <div class="text-5xl mb-4">👥</div>
+                    <h3 class="text-xl font-semibold mb-2 text-orange-800">Socially Acceptable</h3>
+                    <p class="text-stone-600">Management must have public support. This means providing for recreation like hiking and hunting, protecting the aesthetic beauty of the forest, ensuring public safety, and respecting cultural or spiritual values.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="toolkit" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-bold text-center mb-4 text-green-900">The Silviculturist's Toolkit: Regeneration Systems</h2>
+            <p class="max-w-3xl mx-auto text-center text-stone-600 mb-12">
+                A forester's most powerful tools are the regeneration systems—planned sequences of harvesting to replace a mature stand with a new one. The choice of system is a monumental decision with long-term consequences. This section allows you to compare the primary systems. Click on each one to see its structure, purpose, and the critical trade-offs between ecological, economic, and social outcomes.
+            </p>
+            
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <div class="flex flex-wrap justify-center gap-2 mb-6">
+                    <button data-system="clearcut" class="sys-btn bg-green-700 text-white px-4 py-2 rounded-md font-semibold">Clearcut</button>
+                    <button data-system="seed-tree" class="sys-btn bg-stone-500 text-white px-4 py-2 rounded-md font-semibold">Seed-Tree</button>
+                    <button data-system="shelterwood" class="sys-btn bg-stone-500 text-white px-4 py-2 rounded-md font-semibold">Shelterwood</button>
+                    <button data-system="group-selection" class="sys-btn bg-stone-500 text-white px-4 py-2 rounded-md font-semibold">Group Selection</button>
+                    <button data-system="single-tree" class="sys-btn bg-stone-500 text-white px-4 py-2 rounded-md font-semibold">Single-Tree Selection</button>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h3 id="system-title" class="text-2xl font-bold mb-2"></h3>
+                        <p id="system-description" class="text-stone-600 mb-4"></p>
+                        <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 rounded-r-lg" id="high-grading-warning" style="display: none;">
+                          <p class="font-bold">Important Distinction: High-Grading</p>
+                          <p>True selection systems are scientifically planned to improve the forest. They should not be confused with "high-grading," an exploitative practice of only taking the best trees and leaving a degraded, unhealthy forest behind.</p>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="system-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="practice" class="mb-16 scroll-mt-24">
+             <h2 class="text-3xl font-bold text-center mb-4 text-green-900">The Practice: Tending the Stand</h2>
+            <p class="max-w-3xl mx-auto text-center text-stone-600 mb-12">
+               Silviculture isn't just about harvesting; it's about tending a forest throughout its life. This section explores intermediate treatments used to improve stand growth, quality, and health. The most common treatment is thinning. Use the interactive simulator below to see how removing some trees can paradoxically lead to bigger, healthier, and more valuable trees in the long run.
+            </p>
+
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h3 class="text-2xl font-bold text-center mb-2">The Thinning Simulator</h3>
+                <p class="text-center text-stone-600 mb-4">Drag the slider to see the effect of thinning on a forest stand.</p>
+                
+                <div class="mb-4 text-center">
+                    <label for="thinning-slider" class="block font-semibold mb-2">Thinning Intensity: <span id="thinning-value">0</span>%</label>
+                    <input id="thinning-slider" type="range" min="0" max="100" value="0" class="w-full max-w-md mx-auto">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                    <div class="text-center">
+                        <h4 class="font-semibold text-lg mb-2">Before Thinning</h4>
+                        <div id="unthinned-stand" class="h-64 bg-stone-100 rounded-lg p-4 relative overflow-hidden border">
+                        </div>
+                         <p class="text-sm text-stone-500 mt-2">A dense, unmanaged stand. Trees are small and compete heavily for light and resources, leading to slow growth.</p>
+                    </div>
+                    <div class="text-center">
+                        <h4 class="font-semibold text-lg mb-2">After Thinning</h4>
+                        <div id="thinned-stand" class="h-64 bg-stone-100 rounded-lg p-4 relative overflow-hidden border">
+                        </div>
+                        <p class="text-sm text-stone-500 mt-2">Resources are redistributed to fewer, higher-quality "crop trees," which now have more room to grow larger and faster.</p>
+                    </div>
+                </div>
+                 <div id="thinning-paradox-text" class="mt-6 p-4 bg-green-50 border-l-4 border-green-500 rounded-r-lg text-green-800 hidden">
+                    <p class="font-bold">The Paradox of Thinning</p>
+                    <p>Notice how thinning doesn't grow *more* total wood, but rather concentrates that growth onto fewer, more valuable stems. By removing smaller trees, you create larger, higher-quality sawlogs in a shorter time, improving both the economic value and ecological resilience of the stand.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="case-study" class="scroll-mt-24">
+            <h2 class="text-3xl font-bold text-center mb-4 text-green-900">Case Study: Ponderosa Pine Restoration</h2>
+            <p class="max-w-3xl mx-auto text-center text-stone-600 mb-12">
+                This case study integrates all the concepts we've covered by looking at a real-world challenge in the American Southwest. Decades of fire suppression have left Ponderosa Pine forests dangerously overcrowded. The goal now is ecological restoration. Foresters use quantitative tools to decide how much to thin the forest to reduce wildfire risk and improve health. Use the sliders below to act as the forester and determine the target density for a stand based on its specific site conditions.
+            </p>
+
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h3 class="text-2xl font-bold text-center mb-4">Ponderosa Pine Stocking Guide Tool</h3>
+                <div class="grid md:grid-cols-3 gap-8 items-center">
+                    <div class="md:col-span-2">
+                         <div class="mb-6">
+                            <label for="elevation-slider" class="font-semibold">Elevation: <span id="elevation-value" class="font-bold text-green-800"></span> feet</label>
+                            <input id="elevation-slider" type="range" min="5500" max="7500" step="500" value="6500" class="w-full">
+                        </div>
+                        <div>
+                            <label for="precip-slider" class="font-semibold">Annual Precipitation: <span id="precip-value" class="font-bold text-green-800"></span> inches</label>
+                            <input id="precip-slider" type="range" min="16" max="24" step="2" value="20" class="w-full">
+                        </div>
+                    </div>
+                    <div class="text-center bg-stone-100 p-6 rounded-lg border">
+                        <p class="text-lg text-stone-600">Recommended Residual</p>
+                        <p class="text-5xl font-bold text-green-800 my-2" id="ba-result">60</p>
+                        <p class="text-lg text-stone-600">Basal Area (ft²/acre)</p>
+                    </div>
+                </div>
+                 <div class="mt-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg text-blue-800">
+                    <p class="font-bold">What does this mean?</p>
+                    <p>This number is the target density (in square feet of tree stem area per acre) that foresters aim for after thinning. By matching the number of trees to what the site can sustainably support based on elevation and precipitation, they restore the forest's natural structure, making it healthier and much more resilient to catastrophic wildfire.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-stone-800 text-white mt-16">
+        <div class="container mx-auto px-4 py-6 text-center text-stone-400">
+            <p>Interactive Guide to Silviculture</p>
+            <p class="text-sm">Content adapted from "An Introduction to Silvicultural Principles and Practices" for educational purposes.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const systemData = {
+                'clearcut': {
+                    title: 'Clearcut System',
+                    description: 'Removes all trees in an area in one operation, creating a fully exposed environment for a new, single-aged stand. It mimics large-scale natural disturbances like fire and is best for shade-intolerant "pioneer" species like aspen or jack pine.',
+                    values: [2, 1, 5],
+                    showWarning: false
+                },
+                'seed-tree': {
+                    title: 'Seed-Tree System',
+                    description: 'Removes most trees but leaves a few high-quality "seed trees" to naturally regenerate the area. It is a low-cost natural alternative to planting for light-seeded, wind-dispersed species like southern pines.',
+                    values: [2.5, 2, 4],
+                    showWarning: false
+                },
+                'shelterwood': {
+                    title: 'Shelterwood System',
+                    description: 'Removes trees in a series of cuts, regenerating a new stand under the partial "shelter" of the old one. It is ideal for species of intermediate shade tolerance like oaks, as it moderates the climate for young seedlings.',
+                    values: [3.5, 3, 3],
+                    showWarning: false
+                },
+                'group-selection': {
+                    title: 'Group Selection System',
+                    description: 'Harvests trees in small groups, creating a mosaic of different small, even-aged patches within the larger forest. It mimics small-scale disturbances and is highly flexible for managing multiple species and objectives.',
+                    values: [4.5, 4, 2],
+                    showWarning: true
+                },
+                'single-tree': {
+                    title: 'Single-Tree Selection System',
+                    description: 'Periodically removes individual trees, maintaining a continuous forest cover with many age classes. This method is only suitable for very shade-tolerant species like sugar maple and beech.',
+                    values: [5, 4.5, 1.5],
+                    showWarning: true
+                }
+            };
+            
+            const systemChartCtx = document.getElementById('system-chart').getContext('2d');
+            let systemChart;
+
+            function createOrUpdateChart(data) {
+                const chartData = {
+                    labels: ['Ecological Impact (Lower is Better)', 'Social Acceptance (Higher is Better)', 'Economic Efficiency (Higher is Better)'],
+                    datasets: [{
+                        label: 'System Rating',
+                        data: data,
+                        backgroundColor: 'rgba(22, 101, 52, 0.2)',
+                        borderColor: 'rgba(22, 101, 52, 1)',
+                        pointBackgroundColor: 'rgba(22, 101, 52, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(22, 101, 52, 1)',
+                        borderWidth: 2
+                    }]
+                };
+
+                if (systemChart) {
+                    systemChart.data.datasets[0].data = data;
+                    systemChart.update();
+                } else {
+                    systemChart = new Chart(systemChartCtx, {
+                        type: 'radar',
+                        data: chartData,
+                        options: {
+                            maintainAspectRatio: false,
+                            scales: {
+                                r: {
+                                    angleLines: {
+                                        color: 'rgba(0, 0, 0, 0.1)'
+                                    },
+                                    grid: {
+                                        color: 'rgba(0, 0, 0, 0.1)'
+                                    },
+                                    pointLabels: {
+                                        font: {
+                                            size: 12
+                                        },
+                                        color: '#333'
+                                    },
+                                    ticks: {
+                                        beginAtZero: true,
+                                        max: 5,
+                                        stepSize: 1,
+                                        backdropColor: 'rgba(0, 0, 0, 0)',
+                                        color: '#666'
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed.r !== null) {
+                                                label += context.parsed.r.toFixed(1) + ' / 5.0';
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            const sysButtons = document.querySelectorAll('.sys-btn');
+            const systemTitleEl = document.getElementById('system-title');
+            const systemDescEl = document.getElementById('system-description');
+            const highGradingWarningEl = document.getElementById('high-grading-warning');
+
+            sysButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const systemId = button.dataset.system;
+                    const data = systemData[systemId];
+
+                    sysButtons.forEach(btn => {
+                        btn.classList.remove('bg-green-700');
+                        btn.classList.add('bg-stone-500');
+                    });
+                    button.classList.add('bg-green-700');
+                    button.classList.remove('bg-stone-500');
+
+                    systemTitleEl.textContent = data.title;
+                    systemDescEl.textContent = data.description;
+                    highGradingWarningEl.style.display = data.showWarning ? 'block' : 'none';
+                    createOrUpdateChart(data.values);
+                });
+            });
+
+            document.querySelector('[data-system="clearcut"]').click();
+
+            const elevationSlider = document.getElementById('elevation-slider');
+            const precipSlider = document.getElementById('precip-slider');
+            const elevationValueEl = document.getElementById('elevation-value');
+            const precipValueEl = document.getElementById('precip-value');
+            const baResultEl = document.getElementById('ba-result');
+
+            const ponderosaData = {
+                5500: { 16: 30, 18: 40, 20: 50, 22: 60, 24: 70 },
+                6000: { 16: 35, 18: 45, 20: 55, 22: 65, 24: 75 },
+                6500: { 16: 40, 18: 50, 20: 60, 22: 70, 24: 80 },
+                7000: { 16: 45, 18: 55, 20: 65, 22: 75, 24: 85 },
+                7500: { 16: 50, 18: 60, 20: 70, 22: 80, 24: 90 }
+            };
+
+            function updatePonderosaResult() {
+                const elevation = elevationSlider.value;
+                const precip = precipSlider.value;
+                elevationValueEl.textContent = elevation;
+                precipValueEl.textContent = precip;
+                const result = ponderosaData[elevation][precip];
+                baResultEl.textContent = result;
+            }
+
+            elevationSlider.addEventListener('input', updatePonderosaResult);
+            precipSlider.addEventListener('input', updatePonderosaResult);
+            updatePonderosaResult();
+            
+            const thinningSlider = document.getElementById('thinning-slider');
+            const unthinnedStand = document.getElementById('unthinned-stand');
+            const thinnedStand = document.getElementById('thinned-stand');
+            const thinningValueEl = document.getElementById('thinning-value');
+            const paradoxText = document.getElementById('thinning-paradox-text');
+
+            const totalTrees = 60;
+            const trees = [];
+            
+            function createTree(isThinned = false) {
+                const tree = document.createElement('div');
+                const trunk = document.createElement('div');
+                const crown = document.createElement('div');
+                
+                tree.appendChild(crown);
+                tree.appendChild(trunk);
+                tree.classList.add('absolute', 'flex', 'flex-col', 'items-center', 'thinning-tree');
+
+                trunk.style.width = '4px';
+                trunk.style.height = '20px';
+                trunk.classList.add('bg-yellow-900');
+
+                crown.style.borderBottom = '20px solid #166534';
+                crown.style.borderLeft = '10px solid transparent';
+                crown.style.borderRight = '10px solid transparent';
+                crown.style.height = '0';
+                crown.style.width = '0';
+
+                const x = Math.random() * 90 + 5;
+                const y = Math.random() * 80 + 10;
+                tree.style.left = `${x}%`;
+                tree.style.bottom = `${y}%`;
+                tree.style.transform = 'translate(-50%, 50%)';
+                
+                if(isThinned) {
+                    thinnedStand.appendChild(tree);
+                } else {
+                    unthinnedStand.appendChild(tree);
+                }
+                return tree;
+            }
+
+            for(let i=0; i < totalTrees; i++) {
+                createTree(false);
+                const thinnedTree = createTree(true);
+                thinnedTree.dataset.index = i;
+                trees.push(thinnedTree);
+            }
+
+            thinningSlider.addEventListener('input', (e) => {
+                const percentage = e.target.value;
+                thinningValueEl.textContent = percentage;
+                const treesToThin = Math.floor(totalTrees * (percentage / 100));
+
+                trees.forEach((tree, i) => {
+                    const trunk = tree.querySelector('div:last-child');
+                    const crown = tree.querySelector('div:first-child');
+                    if (i < treesToThin) {
+                        tree.style.opacity = '0.2';
+                        tree.style.transform = `translate(-50%, 50%) scale(0.8)`;
+                        trunk.style.height = '15px';
+                        trunk.style.width = '3px';
+                        crown.style.borderBottomWidth = '15px';
+                    } else {
+                        tree.style.opacity = '1';
+                        tree.style.transform = `translate(-50%, 50%) scale(1.2)`;
+                        trunk.style.height = '25px';
+                        trunk.style.width = '6px';
+                        crown.style.borderBottomWidth = '25px';
+                    }
+                });
+
+                if (percentage > 20) {
+                    paradoxText.classList.remove('hidden');
+                } else {
+                    paradoxText.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
