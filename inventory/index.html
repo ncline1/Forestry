@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 4: Forest Mensuration & Inventory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Lato', sans-serif;
+            background-color: #fdfdfd;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Merriweather', serif;
+        }
+        .key-term {
+            font-weight: 700;
+            color: #22543d;
+        }
+        .interactive-box {
+            border-left: 4px solid #48bb78;
+            background-color: #f0fff4;
+        }
+        .tool-bg {
+            background-color: #f7fafc;
+            border: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <header class="bg-green-800 text-white text-center py-10 px-4">
+        <h1 class="text-4xl md:text-5xl font-bold">Chapter 4: Forest Mensuration & Inventory</h1>
+        <p class="text-lg mt-2 text-green-200">The Science of Forest Measurement</p>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 md:py-12 max-w-4xl">
+
+        <section id="introduction" class="mb-12">
+            <h2 class="text-3xl font-bold mb-4 border-b-2 border-green-700 pb-2">Introduction: Why We Measure Forests</h2>
+            <p class="text-lg mb-4">In the previous chapters, we explored how forests function (Ecology) and how we can manage them to meet specific goals (Silviculture). However, none of that is possible without answering a fundamental question: "What's actually out there?" This is the realm of <span class="key-term">Forest Mensuration</span>—the science of measuring trees and forests.</p>
+            <p class="text-lg">Think of a forester like a doctor for the forest. Before a doctor can prescribe a treatment, they need to take measurements: your temperature, blood pressure, weight. Similarly, before a forester can write a management plan, they must conduct a <span class="key-term">Forest Inventory</span> to quantify the forest's resources. Mensuration provides the tools and techniques to perform that inventory.</p>
+        </section>
+
+        <section id="tree-measurements" class="mb-12">
+            <h2 class="text-3xl font-bold mb-4 border-b-2 border-green-700 pb-2">Part 1: Measuring the Individual Tree</h2>
+            <p class="text-lg mb-6">The foundation of any forest inventory is the accurate measurement of individual trees. We focus on three primary attributes: diameter, height, and age.</p>
+
+            <!-- Diameter -->
+            <h3 class="text-2xl font-semibold mb-3">Tree Diameter</h3>
+            <p class="mb-4">Diameter is the single most important tree measurement because it's strongly correlated with a tree's volume, biomass, and value. By convention, diameter is measured at a standardized point to ensure consistency.</p>
+            <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
+                <h4 class="font-bold text-blue-800">Key Concept: Diameter at Breast Height (DBH)</h4>
+                <p class="text-blue-700">The standard for diameter measurement is <span class="key-term">Diameter at Breast Height (DBH)</span>, which is taken at 4.5 feet (1.3 meters) above the ground on the uphill side of the tree. This specific height avoids the irregular swelling common at the base of a tree.</p>
+            </div>
+            
+            <div class="tool-bg p-6 rounded-lg mb-6">
+                <h4 class="text-xl font-bold mb-4 text-center">Common Tool: Diameter Tape (D-Tape)</h4>
+                <p class="text-center mb-4">A D-Tape is a flexible tape measure, but instead of showing standard units, its graduations are based on the formula for circumference ($C = \pi \times D$). Every time the tape wraps $\pi$ inches (approx 3.14"), the tape reads "1 inch". This allows a forester to measure circumference and read diameter directly.</p>
+                <div class="interactive-box p-4 rounded-lg mt-4">
+                    <h5 class="font-bold text-center">Try It Yourself: D-Tape Simulator</h5>
+                    <p class="text-sm text-center mb-4">Move the slider to wrap the D-Tape around the tree and see how it works.</p>
+                    <div class="w-full max-w-md mx-auto">
+                        <label for="d-tape-slider" class="block text-sm font-medium text-gray-700">Circumference:</label>
+                        <input id="d-tape-slider" type="range" min="10" max="100" value="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        <div class="flex justify-center items-center mt-4">
+                            <div class="relative w-32 h-32 rounded-full bg-yellow-800 border-4 border-yellow-900 flex items-center justify-center">
+                                <div id="tape-wrap" class="absolute w-full h-full rounded-full border-2 border-dashed border-gray-400" style="transform: scale(0.2);"></div>
+                                <span class="text-white font-mono text-sm">Tree</span>
+                            </div>
+                            <div class="ml-6 text-center">
+                                <p class="text-gray-600">D-Tape Reads:</p>
+                                <p id="d-tape-output" class="text-2xl font-bold text-green-700">3.2"</p>
+                                <p class="text-xs text-gray-500">(DBH)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Height -->
+            <h3 class="text-2xl font-semibold mb-3 mt-8">Tree Height</h3>
+            <p class="mb-4">Tree height is another critical variable for determining volume. Two height measurements are common: <span class="key-term">Total Height</span> (from the ground to the very top of the tree) and <span class="key-term">Merchantable Height</span> (from the stump to a point on the stem where the tree becomes too small or defective to be used for a product).</p>
+
+            <div class="tool-bg p-6 rounded-lg mb-6">
+                <h4 class="text-xl font-bold mb-4 text-center">Common Tool: Clinometer</h4>
+                <p class="text-center mb-4">A clinometer uses basic trigonometry to calculate height. A forester stands a known distance from the tree (e.g., 100 feet), measures the angle to the top of the tree, and measures the angle to the bottom. The clinometer automatically converts these angles into height readings.</p>
+                <div class="interactive-box p-4 rounded-lg mt-4">
+                    <h5 class="font-bold text-center">Try It Yourself: Clinometer Simulator</h5>
+                    <p class="text-sm text-center mb-4">Adjust the angles to see how the height calculation changes.</p>
+                    <div class="flex justify-center items-center space-x-8">
+                        <div class="text-center">
+                            <p class="text-sm">Angle to Top (% Slope)</p>
+                            <input type="number" id="angle-top" value="75" class="w-24 text-center font-bold text-lg p-1 border rounded">
+                        </div>
+                         <div class="text-center">
+                            <p class="text-sm">Angle to Bottom (% Slope)</p>
+                            <input type="number" id="angle-bottom" value="-5" class="w-24 text-center font-bold text-lg p-1 border rounded">
+                        </div>
+                         <div class="text-center">
+                            <p class="font-bold">Total Height:</p>
+                            <p id="height-output" class="text-3xl font-bold text-green-700">80 ft</p>
+                        </div>
+                    </div>
+                     <p class="text-xs text-center mt-4 text-gray-500">Formula (at 100ft distance): Height = (% Top Reading) - (% Bottom Reading)</p>
+                </div>
+            </div>
+            
+            <!-- Age -->
+            <h3 class="text-2xl font-semibold mb-3 mt-8">Tree Age</h3>
+            <p class="mb-4">Age is essential for understanding a forest's growth rate and history. While counting rings on a stump is accurate, it's not practical for living trees. Instead, foresters use a specialized tool.</p>
+
+             <div class="tool-bg p-6 rounded-lg mb-6">
+                <h4 class="text-xl font-bold mb-4 text-center">Common Tool: Increment Borer</h4>
+                <p class="text-center mb-4">An increment borer is a hollow drill bit that extracts a small, pencil-thin core from the tree's trunk without killing it. The forester can then count the annual growth rings on this core to determine the tree's age at the height of the boring.</p>
+             </div>
+        </section>
+
+        <section id="inventory" class="mb-12">
+            <h2 class="text-3xl font-bold mb-4 border-b-2 border-green-700 pb-2">Part 2: Measuring the Forest</h2>
+            <p class="text-lg mb-4">Measuring every single tree in a large forest (a <span class="key-term">census</span>) is usually impossible. Instead, foresters rely on statistics to measure a representative <span class="key-term">sample</span> of the forest and then extrapolate those findings to the entire area.</p>
+
+            <h3 class="text-2xl font-semibold mb-3">Sampling with Plots</h3>
+            <p class="mb-4">An inventory is conducted by establishing a series of sample points, or <span class="key-term">plots</span>, throughout the forest. Within each plot, every tree is measured. The data from all plots is then averaged and scaled up.</p>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="tool-bg p-6 rounded-lg">
+                    <h4 class="text-xl font-bold mb-2">Fixed-Radius Plots</h4>
+                    <p>The most straightforward method. The forester establishes a circular plot of a known size (e.g., 1/10th of an acre). Every tree whose center falls within that circle is measured. This is easy to understand but can be inefficient, as you might measure many small, low-value trees.</p>
+                </div>
+                <div class="tool-bg p-6 rounded-lg">
+                    <h4 class="text-xl font-bold mb-2">Variable-Radius Plots (Prism Cruising)</h4>
+                    <p>A more advanced and highly efficient method. Using an angle gauge or glass prism, the forester stands at a single point and sights each nearby tree. The prism optically shifts the tree trunk. If the shifted image overlaps with the real trunk, the tree is "in" and tallied. This method automatically samples more large trees than small trees, biasing the sample towards the trees with the most volume and value.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="conclusion">
+             <h2 class="text-3xl font-bold mb-4 border-b-2 border-green-700 pb-2">Conclusion: From Measurement to Management</h2>
+             <p class="text-lg mb-4">Forest inventory is the bridge between understanding a forest and managing it wisely. The data gathered—such as volume per acre, species composition, and average growth rates—is what informs every silvicultural decision. It allows a forester to:</p>
+             <ul class="list-disc list-inside text-lg space-y-2">
+                 <li>Determine a sustainable harvest level.</li>
+                 <li>Estimate the economic value of a timber sale.</li>
+                 <li>Model future forest growth and yield.</li>
+                 <li>Assess wildlife habitat suitability.</li>
+                 <li>Plan thinning treatments to improve forest health.</li>
+             </ul>
+             <p class="text-lg mt-4">Without accurate measurement, forestry is just guesswork. With it, forestry becomes a powerful science for stewarding our natural resources.</p>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-8">
+        <div class="container mx-auto px-4 py-6 text-center text-gray-400">
+            <p>End of Chapter 4: Forest Mensuration & Inventory</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // D-Tape Simulator
+            const dTapeSlider = document.getElementById('d-tape-slider');
+            const dTapeOutput = document.getElementById('d-tape-output');
+            const tapeWrap = document.getElementById('tape-wrap');
+
+            dTapeSlider.addEventListener('input', (e) => {
+                const circumference = parseFloat(e.target.value);
+                const diameter = circumference / Math.PI;
+                dTapeOutput.textContent = `${diameter.toFixed(1)}"`;
+                const scale = circumference / 100; // Max circumference is 100
+                tapeWrap.style.transform = `scale(${scale * 1.5 + 0.2})`;
+            });
+            // Initial call
+            dTapeSlider.dispatchEvent(new Event('input'));
+
+
+            // Clinometer Simulator
+            const angleTopInput = document.getElementById('angle-top');
+            const angleBottomInput = document.getElementById('angle-bottom');
+            const heightOutput = document.getElementById('height-output');
+
+            function updateHeight() {
+                const topAngle = parseFloat(angleTopInput.value) || 0;
+                const bottomAngle = parseFloat(angleBottomInput.value) || 0;
+                
+                // Formula for % slope: Height = (Top Reading - Bottom Reading) * (Distance / 100)
+                // Assuming 100 ft distance for simplicity
+                const height = topAngle - bottomAngle;
+                heightOutput.textContent = `${Math.round(height)} ft`;
+            }
+
+            angleTopInput.addEventListener('input', updateHeight);
+            angleBottomInput.addEventListener('input', updateHeight);
+            // Initial call
+            updateHeight();
+        });
+    </script>
+
+</body>
+</html>
