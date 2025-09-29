@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<!-- Chosen Palette: Earthy Neutrals -->
+<!-- Application Structure Plan: The SPA is designed as an interactive textbook chapter, moving from foundational concepts to complex applications. The structure is thematic and linear: Introduction -> Core Economic Concepts -> Valuation -> Core Policy Concepts -> Policy in Action -> Synthesis/Sandbox. Navigation uses a top bar to jump between these key sections. This structure was chosen because it mirrors a logical learning progression, allowing a user to build knowledge progressively. Interactions focus on making abstract concepts tangible, like using sliders to see the effect of discount rates on investment decisions and toggles to compare different policy instrument outcomes. This user flow is designed for comprehension and exploration rather than data analysis. -->
+<!-- Visualization & Content Choices: 1. Timber Growth vs. Financial Value: Line chart (Chart.js) to show biological growth curve vs. economic value over time. Goal: Illustrate the core conflict in determining rotation age. Interaction: A slider allows the user to change the discount rate, which dynamically updates the financial value curve, demonstrating how interest rates influence harvest decisions. 2. Non-Market Valuation Methods: An interactive card layout (HTML/Tailwind/JS). Goal: Explain complex valuation methods simply. Interaction: Clicking on a card (e.g., 'Travel Cost Method') reveals a simplified explanation and a hypothetical example. 3. Policy Instruments Comparison: A dynamic table/grid (HTML/Tailwind/JS). Goal: Compare and contrast different policy tools. Interaction: Users can select criteria (e.g., 'Economic Efficiency', 'Ease of Implementation') to highlight how different instruments (Regulations, Taxes, Easements) perform, updating text descriptions and visual ratings. This makes the abstract trade-offs of policy design clear. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 7: Forest Economics & Policy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fdfcfb;
+            color: #3d405b;
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link.active {
+            color: #81b29a;
+            border-bottom-color: #81b29a;
+        }
+        .card {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .interactive-section {
+            border-left: 3px solid #e07a5f;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 450px;
+        }
+         @media (min-width: 768px) { .chart-container { height: 400px; } }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div id="app" class="container mx-auto p-4 md:p-8 max-w-7xl">
+        
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-[#3d405b]">Chapter 7: Forest Economics & Policy</h1>
+            <p class="mt-4 text-lg text-gray-600">An interactive exploration of the forces shaping our forests.</p>
+        </header>
+
+        <nav class="sticky top-0 bg-[#fdfcfb] bg-opacity-90 backdrop-blur-sm z-10 border-b-2 border-gray-200 mb-12">
+            <div class="flex justify-center space-x-4 md:space-x-8 py-4">
+                <a href="#economics" class="nav-link text-gray-700 hover:text-[#81b29a] font-semibold border-b-2 border-transparent pb-1">Economics</a>
+                <a href="#valuation" class="nav-link text-gray-700 hover:text-[#81b29a] font-semibold border-b-2 border-transparent pb-1">Valuation</a>
+                <a href="#policy" class="nav-link text-gray-700 hover:text-[#81b29a] font-semibold border-b-2 border-transparent pb-1">Policy</a>
+                <a href="#instruments" class="nav-link text-gray-700 hover:text-[#81b29a] font-semibold border-b-2 border-transparent pb-1">Instruments</a>
+            </div>
+        </nav>
+
+        <main>
+            <section id="economics" class="mb-16 scroll-mt-24">
+                <h2 class="text-3xl font-bold text-[#e07a5f] mb-4">Section 1: Forest Economics</h2>
+                <p class="text-base md:text-lg leading-relaxed text-gray-700 mb-8">
+                    Forest economics applies economic theories to understand how we manage and utilize forest resources. This section explores the foundational concepts, from the unique financial nature of trees as long-term assets to the critical decision of when to harvest for optimal financial return. We'll examine how factors like time, risk, and interest rates influence forest management.
+                </p>
+                
+                <div class="bg-white p-6 md:p-8 rounded-xl shadow-md border border-gray-200">
+                    <h3 class="text-2xl font-bold text-center mb-2">The Forester's Dilemma: When to Harvest?</h3>
+                    <p class="text-center text-gray-600 mb-6">This interactive chart illustrates the core financial decision in forestry. A tree is both a factory (growing wood) and a product. The optimal economic time to harvest is when the financial growth rate slows to match what you could earn by investing the money elsewhere (the discount rate). Explore how changing the discount rate affects the optimal rotation age.</p>
+                    <div class="chart-container">
+                        <canvas id="rotationAgeChart"></canvas>
+                    </div>
+                    <div class="mt-6 px-4">
+                        <label for="discountRate" class="block text-center font-semibold text-gray-700">Discount Rate: <span id="rateValue" class="font-bold text-[#81b29a]">5%</span></label>
+                        <input type="range" id="discountRate" min="1" max="10" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-2">
+                    </div>
+                </div>
+            </section>
+            
+            <section id="valuation" class="mb-16 scroll-mt-24">
+                <h2 class="text-3xl font-bold text-[#e07a5f] mb-4">Valuing the Priceless</h2>
+                 <p class="text-base md:text-lg leading-relaxed text-gray-700 mb-8">
+                    Forests provide far more than just timber. They offer critical ecosystem services like clean water, air purification, and recreation, which don't have a market price. This section introduces the challenge of non-market valuation. Below, you can explore the different economic methods used to assign monetary value to these "priceless" benefits, a crucial step for ensuring they are considered in policy and land-use decisions.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                     <div class="card bg-white p-6 rounded-xl shadow-md border border-gray-200 cursor-pointer" onclick="showValuationInfo('contingent')">
+                        <h4 class="font-bold text-xl mb-2 text-[#3d405b]">Contingent Valuation</h4>
+                        <p class="text-gray-600">Directly asking people what they are willing to pay for an environmental good.</p>
+                    </div>
+                     <div class="card bg-white p-6 rounded-xl shadow-md border border-gray-200 cursor-pointer" onclick="showValuationInfo('travel')">
+                        <h4 class="font-bold text-xl mb-2 text-[#3d405b]">Travel Cost Method</h4>
+                        <p class="text-gray-600">Valuing a site based on how much visitors spend to get there.</p>
+                    </div>
+                     <div class="card bg-white p-6 rounded-xl shadow-md border border-gray-200 cursor-pointer" onclick="showValuationInfo('hedonic')">
+                        <h4 class="font-bold text-xl mb-2 text-[#3d405b]">Hedonic Pricing</h4>
+                        <p class="text-gray-600">Isolating the value of an amenity through its effect on market prices (e.g., housing).</p>
+                    </div>
+                </div>
+                 <div id="valuationInfo" class="mt-6 bg-[#f2cc8f] bg-opacity-30 p-6 rounded-xl border-2 border-[#f2cc8f] hidden">
+                    <h5 id="infoTitle" class="font-bold text-xl text-[#3d405b] mb-2"></h5>
+                    <p id="infoDesc" class="text-gray-800"></p>
+                    <p id="infoExample" class="mt-2 text-sm text-gray-700 italic"></p>
+                </div>
+            </section>
+
+            <section id="policy" class="mb-16 scroll-mt-24">
+                <h2 class="text-3xl font-bold text-[#e07a5f] mb-4">Section 2: Forest Policy</h2>
+                <p class="text-base md:text-lg leading-relaxed text-gray-700 mb-8">
+                    Forest policy creates the rules and incentives that guide forest management. It's how societies translate their values—for conservation, economic use, and recreation—into action. This section covers the "why" and "how" of forest policy, from the goals it aims to achieve to the major laws that shape forestry in the United States.
+                </p>
+                <div class="bg-white p-6 md:p-8 rounded-xl shadow-md border border-gray-200">
+                    <h3 class="text-2xl font-bold text-center mb-4">Key U.S. Forest Legislation</h3>
+                    <p class="text-center text-gray-600 mb-6">Explore some of the landmark laws that govern forest management on public and private lands.</p>
+                    <div class="space-y-4">
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-lg text-[#81b29a]">National Forest Management Act (NFMA)</h4>
+                            <p class="text-gray-700 mt-1">Requires systematic, interdisciplinary planning for national forests to ensure sustainable resource management and public participation.</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-lg text-[#81b29a]">Endangered Species Act (ESA)</h4>
+                            <p class="text-gray-700 mt-1">Mandates the protection of threatened and endangered species and their habitats, significantly influencing timber harvesting practices.</p>
+                        </div>
+                         <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-lg text-[#81b29a]">Clean Water Act (CWA)</h4>
+                            <p class="text-gray-700 mt-1">Regulates water pollution, leading to the development of Best Management Practices (BMPs) to control erosion from forestry operations.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="instruments" class="scroll-mt-24">
+                 <h2 class="text-3xl font-bold text-[#e07a5f] mb-4">The Policymaker's Toolbox</h2>
+                 <p class="text-base md:text-lg leading-relaxed text-gray-700 mb-8">
+                    To achieve policy goals, governments use a variety of tools, or "instruments." These range from direct rules to market-based incentives. Each instrument has different strengths and weaknesses in terms of its effectiveness, economic efficiency, and political feasibility. This interactive tool allows you to compare different policy instruments based on key criteria.
+                </p>
+                <div class="bg-white p-6 md:p-8 rounded-xl shadow-md border border-gray-200">
+                    <div class="md:flex md:space-x-8">
+                        <div class="md:w-1/3 mb-6 md:mb-0">
+                            <h4 class="font-bold text-xl mb-4">Select an Instrument:</h4>
+                            <div class="space-y-2">
+                                <button class="instrument-btn w-full text-left p-3 rounded-md bg-gray-100 hover:bg-[#e07a5f] hover:text-white transition" onclick="showInstrumentInfo('regulation')">Command & Control</button>
+                                <button class="instrument-btn w-full text-left p-3 rounded-md bg-gray-100 hover:bg-[#e07a5f] hover:text-white transition" onclick="showInstrumentInfo('incentive')">Taxes & Subsidies</button>
+                                <button class="instrument-btn w-full text-left p-3 rounded-md bg-gray-100 hover:bg-[#e07a5f] hover:text-white transition" onclick="showInstrumentInfo('market')">Market-Based (e.g., Carbon)</button>
+                                <button class="instrument-btn w-full text-left p-3 rounded-md bg-gray-100 hover:bg-[#e07a5f] hover:text-white transition" onclick="showInstrumentInfo('voluntary')">Voluntary (e.g., Certification)</button>
+                            </div>
+                        </div>
+                        <div class="md:w-2/3 interactive-section pl-4 md:pl-6">
+                             <div id="instrumentInfo">
+                                <h4 class="font-bold text-2xl mb-2" id="instrumentTitle">Select an instrument</h4>
+                                <p class="text-gray-600" id="instrumentDesc">Click on an instrument to the left to learn about its mechanism, advantages, and disadvantages in forest policy.</p>
+                                <div class="mt-4" id="instrumentDetails"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const timberData = {
+                labels: Array.from({ length: 81 }, (_, i) => i),
+                biologicalGrowth: [],
+                baseEconomicValue: []
+            };
+
+            for (let age = 0; age <= 80; age++) {
+                const growth = 100 / (1 + Math.exp(-0.15 * (age - 35)));
+                timberData.biologicalGrowth.push(growth);
+                timberData.baseEconomicValue.push(growth * (1 + age / 100) * 50); 
+            }
+
+            function calculateNPV(rate) {
+                const discountFactor = 1 + rate / 100;
+                return timberData.baseEconomicValue.map((value, age) => {
+                    if (age === 0) return 0;
+                    return value / Math.pow(discountFactor, age);
+                });
+            }
+
+            const chartCtx = document.getElementById('rotationAgeChart').getContext('2d');
+            const rotationAgeChart = new Chart(chartCtx, {
+                type: 'line',
+                data: {
+                    labels: timberData.labels,
+                    datasets: [{
+                        label: 'Biological Volume (m³)',
+                        data: timberData.biologicalGrowth,
+                        borderColor: '#81b29a',
+                        backgroundColor: '#81b29a' + '33',
+                        fill: false,
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Net Present Value ($)',
+                        data: calculateNPV(5),
+                        borderColor: '#e07a5f',
+                        backgroundColor: '#e07a5f' + '33',
+                        fill: true,
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Stand Age (Years)' }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Biological Volume' },
+                            grid: { drawOnChartArea: false }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: 'Net Present Value ($)' }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                             callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        if (context.dataset.yAxisID === 'y1') {
+                                           label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
+                                        } else {
+                                             label += context.parsed.y.toFixed(2) + ' m³';
+                                        }
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const discountRateSlider = document.getElementById('discountRate');
+            const rateValueSpan = document.getElementById('rateValue');
+
+            discountRateSlider.addEventListener('input', (e) => {
+                const rate = e.target.value;
+                rateValueSpan.textContent = `${rate}%`;
+                rotationAgeChart.data.datasets[1].data = calculateNPV(rate);
+                rotationAgeChart.update();
+            });
+            
+            const valuationData = {
+                contingent: {
+                    title: 'Contingent Valuation',
+                    desc: 'This method involves creating a hypothetical market and asking people survey questions to determine how much they would be willing to pay (WTP) for a non-market good, like the existence of an old-growth forest, or how much they would be willing to accept (WTA) as compensation to give it up.',
+                    example: 'Example: A survey asks residents how much they would be willing to pay in additional annual taxes to fund a program that protects a local river from pollution, thereby preserving its fish stocks and recreational quality.'
+                },
+                travel: {
+                    title: 'Travel Cost Method',
+                    desc: 'This method infers the value of a recreational site by observing the behavior of its users. It assumes that the costs people incur to visit a site (e.g., for fuel, lodging, and the opportunity cost of their time) represent a lower-bound estimate of the value they place on that site.',
+                    example: 'Example: To value a national park, economists survey visitors about their travel distance, expenses, and frequency of visits. This data is used to model a demand curve for the park, from which its recreational value can be estimated.'
+                },
+                hedonic: {
+                    title: 'Hedonic Pricing',
+                    desc: 'This method is used to estimate the value of an environmental amenity by examining its effect on the prices of related market goods, most commonly housing. It statistically teases out the premium people are willing to pay for properties with better environmental qualities.',
+                    example: 'Example: An analysis of home sales reveals that, all else being equal, houses closer to a large, well-maintained urban forest sell for 5-10% more than identical houses located further away.'
+                }
+            };
+            
+            window.showValuationInfo = (type) => {
+                const data = valuationData[type];
+                document.getElementById('infoTitle').textContent = data.title;
+                document.getElementById('infoDesc').textContent = data.desc;
+                document.getElementById('infoExample').textContent = data.example;
+                document.getElementById('valuationInfo').classList.remove('hidden');
+            };
+
+            const instrumentData = {
+                regulation: {
+                    title: 'Command & Control',
+                    desc: 'These are direct rules and standards set by government agencies. They are relatively straightforward to design but can be economically inefficient.',
+                    details: `
+                        <p class="mb-2"><strong>Mechanism:</strong> Laws that forbid, limit, or mandate certain actions (e.g., "You must leave a 100-foot buffer around all streams.").</p>
+                        <p class="mb-2"><strong>Pros:</strong> Predictable outcomes, effective at preventing worst-case environmental damage.</p>
+                        <p><strong>Cons:</strong> Can be costly for landowners, offers no incentive for innovation beyond the standard, one-size-fits-all approach may be inefficient.</p>
+                    `
+                },
+                incentive: {
+                    title: 'Taxes & Subsidies',
+                    desc: 'These instruments use financial rewards or penalties to encourage behavior that aligns with policy goals.',
+                    details: `
+                        <p class="mb-2"><strong>Mechanism:</strong> A tax on harvesting (severance tax) makes logging less profitable. A subsidy (cost-share) for tree planting makes it more affordable.</p>
+                        <p class="mb-2"><strong>Pros:</strong> Provides flexibility for landowners to choose the most cost-effective way to respond, can generate revenue (taxes).</p>
+                        <p><strong>Cons:</strong> Difficult to set the tax/subsidy at the precisely correct level to achieve the desired outcome, can be politically unpopular.</p>
+                    `
+                },
+                market: {
+                    title: 'Market-Based Instruments',
+                    desc: 'These create a market for environmental goods or services, like carbon sequestration or wetland preservation.',
+                    details: `
+                        <p class="mb-2"><strong>Mechanism:</strong> A "cap-and-trade" system for carbon sets a limit on emissions and allows companies to buy/sell permits. Forest owners can sell credits for the carbon their trees absorb.</p>
+                        <p class="mb-2"><strong>Pros:</strong> Highly economically efficient, encourages finding the lowest-cost methods for environmental protection, spurs innovation.</p>
+                        <p><strong>Cons:</strong> Can be complex to set up and monitor, potential for price volatility in the market.</p>
+                    `
+                },
+                voluntary: {
+                    title: 'Voluntary Programs',
+                    desc: 'These programs rely on education, information, and social incentives rather than direct regulation or financial penalties.',
+                    details: `
+                        <p class="mb-2"><strong>Mechanism:</strong> Third-party certification (like FSC or SFI) provides a "green" label for products from well-managed forests, allowing consumers to vote with their wallets.</p>
+                        <p class="mb-2"><strong>Pros:</strong> High flexibility, market-driven, fosters a conservation ethic among landowners and consumers.</p>
+                        <p><strong>Cons:</strong> Impact can be limited by consumer awareness and willingness to pay more, may not address the most pressing environmental issues if participation is low.</p>
+                    `
+                }
+            };
+
+             window.showInstrumentInfo = (type) => {
+                const data = instrumentData[type];
+                document.getElementById('instrumentTitle').textContent = data.title;
+                document.getElementById('instrumentDesc').textContent = data.desc;
+                document.getElementById('instrumentDetails').innerHTML = data.details;
+                document.querySelectorAll('.instrument-btn').forEach(btn => btn.classList.remove('bg-[#e07a5f]', 'text-white'));
+                document.querySelector(`button[onclick="showInstrumentInfo('${type}')"]`).classList.add('bg-[#e07a5f]', 'text-white');
+             };
+             
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { rootMargin: "-50% 0px -50% 0px" });
+
+            sections.forEach(section => observer.observe(section));
+
+        });
+    </script>
+</body>
+</html>
