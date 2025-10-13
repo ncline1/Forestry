@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 9: Forest Health: Pathology & Entomology</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Earthy Tones -->
+    <!-- Application Structure Plan: The application is structured as an interactive textbook chapter, guiding the user from a broad overview to specific topics and finally to practical application. A sticky top navigation allows easy access to key sections: Overview, Diseases, Pests, and IPM. This linear-yet-flexible structure was chosen because it mirrors a natural learning progression, making complex biological information digestible. Interactive elements like tabs for categorization, step-by-step diagrams for life cycles, and a final quiz for knowledge reinforcement are used to replace passive reading with active exploration, enhancing user engagement and understanding. -->
+    <!-- Visualization & Content Choices: 1. Disease Impact: Bar Chart (Chart.js) to compare the relative damage severity between different diseases (Goal: Compare). Interaction: Tooltips on hover provide specific metrics. Justification: Bar charts are excellent for direct quantitative comparison. 2. Pest Damage: Donut Chart (Chart.js) to show the proportion of forest damage attributed to different pest types (Goal: Show Proportion). Interaction: Tooltips on hover. Justification: Donut charts clearly illustrate part-to-whole relationships. 3. Life Cycles: Custom HTML/CSS/JS diagram to visualize sequential stages (Goal: Explain a Process). Interaction: User clicks 'next/prev' to progress through the cycle. Justification: Breaks down a complex process into simple, interactive steps, improving comprehension over a static graphic. 4. IPM Strategy: Custom HTML/CSS/JS pyramid to represent the hierarchical control methods (Goal: Explain a Framework). Interaction: Clicking a level reveals detailed information. Justification: Visually reinforces the foundational and escalating nature of IPM. All visual elements are built without SVG or Mermaid, using browser-native technologies for performance and simplicity. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FBF9F6;
+            color: #403A3A;
+        }
+        .nav-link {
+            transition: color 0.3s ease, border-bottom-color 0.3s ease;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #2E7D32;
+            border-bottom-color: #2E7D32;
+        }
+        .tab-btn.active {
+            background-color: #388E3C;
+            color: #FFFFFF;
+        }
+        .tab-btn {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .interactive-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .interactive-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 40vh;
+            max-height: 400px;
+        }
+        .ipm-level {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .ipm-level:hover {
+            filter: brightness(0.95);
+        }
+        .lifecycle-step {
+            opacity: 0.5;
+            transition: opacity 0.5s ease;
+        }
+        .lifecycle-step.active {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-[#D7CCC8]/50 backdrop-blur-lg sticky top-0 z-50 border-b border-[#BCAAA4]/50">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="font-bold text-xl text-[#5D4037]">Forest Health</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#overview" class="nav-link text-gray-700 px-3 py-2 text-sm font-medium border-b-2 border-transparent">Overview</a>
+                        <a href="#diseases" class="nav-link text-gray-700 px-3 py-2 text-sm font-medium border-b-2 border-transparent">Diseases</a>
+                        <a href="#pests" class="nav-link text-gray-700 px-3 py-2 text-sm font-medium border-b-2 border-transparent">Pests</a>
+                        <a href="#ipm" class="nav-link text-gray-700 px-3 py-2 text-sm font-medium border-b-2 border-transparent">IPM</a>
+                        <a href="#lab" class="nav-link text-gray-700 px-3 py-2 text-sm font-medium border-b-2 border-transparent">Field Lab</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div id="overview" class="text-center mb-24 pt-16">
+            <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-[#4E342E] mb-4">Chapter 9: Diseases and Pests of the Forest</h1>
+            <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">An introduction to the major biotic threats to forest health. This chapter explores common forest diseases and insect pests, focusing on their identification, life cycles, and the principles of Integrated Pest Management (IPM).</p>
+        
+            <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div class="interactive-card bg-white p-8 rounded-xl border border-gray-200">
+                    <div class="text-3xl text-green-700 mb-4">🔬</div>
+                    <h3 class="text-2xl font-semibold text-[#5D4037]">Forest Pathology</h3>
+                    <p class="text-gray-600 mt-2">The study of diseases that affect the health of forest trees. These are caused by biotic agents like fungi, bacteria, and viruses, leading to issues like rots and rusts.</p>
+                </div>
+                <div class="interactive-card bg-white p-8 rounded-xl border border-gray-200">
+                    <div class="text-3xl text-orange-700 mb-4">🐞</div>
+                    <h3 class="text-2xl font-semibold text-[#5D4037]">Forest Entomology</h3>
+                    <p class="text-gray-600 mt-2">The study of insects and their relationship with forest ecosystems. This includes damaging pests like bark beetles and defoliators that can cause widespread tree mortality.</p>
+                </div>
+            </div>
+        </div>
+
+        <section id="diseases" class="mb-24 pt-16">
+            <h2 class="text-3xl font-bold text-center text-[#4E342E] mb-2">Forest Diseases: The Silent Threat</h2>
+            <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">Forest diseases, primarily caused by fungi, are a major driver of change in forest ecosystems. They can weaken trees, reduce timber value, and alter wildlife habitats. Understanding their types and impacts is crucial for effective forest management.</p>
+            
+            <div class="bg-white p-8 rounded-lg shadow-sm border border-gray-200">
+                <div class="flex justify-center border-b border-gray-200 mb-8">
+                    <div id="disease-tabs" class="flex flex-wrap -mb-px space-x-4">
+                        <button class="tab-btn disease-tab py-2 px-4 font-medium text-gray-600 bg-gray-100 rounded-t-lg" data-target="disease-rots">Rots</button>
+                        <button class="tab-btn disease-tab py-2 px-4 font-medium text-gray-600 bg-gray-100 rounded-t-lg" data-target="disease-rusts">Rusts</button>
+                        <button class="tab-btn disease-tab py-2 px-4 font-medium text-gray-600 bg-gray-100 rounded-t-lg" data-target="disease-cankers">Cankers</button>
+                    </div>
+                </div>
+                <div id="disease-content">
+                    <div class="disease-panel" id="disease-rots">
+                        <div class="grid md:grid-cols-2 gap-8 items-center">
+                            <div>
+                                <h3 class="text-2xl font-semibold text-[#5D4037] mb-3">Wood Rots (Heart & Root)</h3>
+                                <p class="text-gray-600 mb-4">Caused by fungi that decay the wood in a tree's core (heart rot) or root system (root rot). This structurally weakens the tree, making it susceptible to windthrow. It's often invisible externally until fruiting bodies (conks or mushrooms) appear.</p>
+                                <ul class="list-disc list-inside text-gray-600 space-y-1">
+                                    <li><strong>Identification:</strong> Fungal conks on the trunk or base, declining crown health, softened wood.</li>
+                                    <li><strong>Impact:</strong> Significant loss of timber value, high risk of tree failure.</li>
+                                </ul>
+                            </div>
+                            <div class="chart-container mx-auto max-w-md">
+                                <canvas id="diseaseImpactChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="disease-panel hidden" id="disease-rusts">
+                        <h3 class="text-2xl font-semibold text-[#5D4037] mb-3">Rust Diseases</h3>
+                        <p class="text-gray-600">Rust fungi are complex pathogens, often requiring two different host plants to complete their life cycle. They produce distinctive orange or rust-colored spores. White Pine Blister Rust is a classic example, affecting five-needle pines and Ribes (currant/gooseberry) plants.</p>
+                         <ul class="list-disc list-inside text-gray-600 space-y-1 mt-4">
+                            <li><strong>Identification:</strong> Swollen branches (galls), bright orange pustules on bark or needles.</li>
+                            <li><strong>Impact:</strong> Can be lethal, especially to young trees, disrupting commercial pine cultivation.</li>
+                        </ul>
+                    </div>
+                    <div class="disease-panel hidden" id="disease-cankers">
+                         <h3 class="text-2xl font-semibold text-[#5D4037] mb-3">Canker Diseases</h3>
+                         <p class="text-gray-600">Cankers are localized areas of dead tissue on a stem, branch, or twig, caused by fungal pathogens entering through a wound. The tree attempts to wall off the infection, resulting in a sunken, discolored lesion. Examples include Hypoxylon canker on aspens.</p>
+                         <ul class="list-disc list-inside text-gray-600 space-y-1 mt-4">
+                            <li><strong>Identification:</strong> Sunken, dead areas on bark, often with a raised callus edge. Discoloration of wood underneath.</li>
+                            <li><strong>Impact:</strong> Can girdle and kill branches or entire young trees. Reduces wood quality.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="pests" class="mb-24 pt-16">
+            <h2 class="text-3xl font-bold text-center text-[#4E342E] mb-2">Insect Pests: The Active Foragers</h2>
+            <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">Forest insects play many roles, but some species can cause devastating damage, especially during outbreaks. They are often categorized by how they feed, such as boring into bark or defoliating leaves and needles.</p>
+            
+            <div class="bg-white p-8 rounded-lg shadow-sm border border-gray-200">
+                <div class="flex justify-center border-b border-gray-200 mb-8">
+                    <div id="pest-tabs" class="flex flex-wrap -mb-px space-x-4">
+                        <button class="tab-btn pest-tab py-2 px-4 font-medium text-gray-600 bg-gray-100 rounded-t-lg" data-target="pest-beetles">Bark Beetles</button>
+                        <button class="tab-btn pest-tab py-2 px-4 font-medium text-gray-600 bg-gray-100 rounded-t-lg" data-target="pest-defoliators">Defoliators</button>
+                    </div>
+                </div>
+                <div id="pest-content">
+                    <div class="pest-panel" id="pest-beetles">
+                        <div class="grid md:grid-cols-2 gap-8 items-center">
+                            <div>
+                                <h3 class="text-2xl font-semibold text-[#5D4037] mb-3">Bark Beetles</h3>
+                                <p class="text-gray-600 mb-4">These small beetles (e.g., Mountain Pine Beetle) reproduce under the bark of trees. They chew through the phloem, cutting off the transport of nutrients. Mass attacks can overwhelm and kill even healthy trees, often aided by fungi the beetles introduce.</p>
+                                <ul class="list-disc list-inside text-gray-600 space-y-1">
+                                    <li><strong>Identification:</strong> Popcorn-like pitch tubes on bark, boring dust (frass), distinctive S-shaped galleries under the bark.</li>
+                                    <li><strong>Impact:</strong> Capable of causing landscape-level tree mortality during outbreaks.</li>
+                                </ul>
+                            </div>
+                            <div class="chart-container mx-auto max-w-sm">
+                                <canvas id="pestImpactChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pest-panel hidden" id="pest-defoliators">
+                        <h3 class="text-2xl font-semibold text-[#5D4037] mb-3">Defoliators</h3>
+                        <p class="text-gray-600">These insects, typically the larval stage (caterpillars) of moths like the Spruce Budworm or Gypsy Moth, consume the leaves or needles of trees. While a single defoliation event may not kill a tree, repeated events can severely stress it, making it vulnerable to other threats.</p>
+                        <div class="mt-8">
+                            <h4 class="font-semibold text-lg text-[#5D4037] mb-4">Life Cycle of a Typical Defoliator</h4>
+                            <div class="flex justify-between items-center text-center text-sm" id="defoliator-lifecycle">
+                                <div class="lifecycle-step flex-1" data-stage="0">
+                                    <div class="text-3xl mb-2">🥚</div><p class="font-medium">Egg</p><p class="text-xs text-gray-500">Overwinters on bark</p>
+                                </div>
+                                <div class="text-gray-300 mx-2 text-2xl">→</div>
+                                <div class="lifecycle-step flex-1" data-stage="1">
+                                    <div class="text-3xl mb-2">🐛</div><p class="font-medium">Larva</p><p class="text-xs text-gray-500">Feeds on foliage</p>
+                                </div>
+                                <div class="text-gray-300 mx-2 text-2xl">→</div>
+                                <div class="lifecycle-step flex-1" data-stage="2">
+                                    <div class="text-3xl mb-2">⚪</div><p class="font-medium">Pupa</p><p class="text-xs text-gray-500">Transforms in cocoon</p>
+                                </div>
+                                <div class="text-gray-300 mx-2 text-2xl">→</div>
+                                <div class="lifecycle-step flex-1" data-stage="3">
+                                    <div class="text-3xl mb-2">🦋</div><p class="font-medium">Adult</p><p class="text-xs text-gray-500">Mates and lays eggs</p>
+                                </div>
+                            </div>
+                            <p id="lifecycle-description" class="mt-4 text-center text-gray-700 h-10"></p>
+                            <div class="flex justify-center mt-2">
+                                <button id="cycle-prev" class="px-3 py-1 bg-gray-200 rounded-l-md hover:bg-gray-300">‹</button>
+                                <button id="cycle-next" class="px-3 py-1 bg-gray-200 rounded-r-md hover:bg-gray-300">›</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="ipm" class="mb-24 pt-16">
+            <h2 class="text-3xl font-bold text-center text-[#4E342E] mb-2">Integrated Pest Management (IPM)</h2>
+            <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">IPM is a sustainable, science-based approach to managing pests and diseases. It combines multiple strategies to minimize health, environmental, and economic risks, using harsh interventions like pesticides only as a last resort.</p>
+            
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="relative w-full max-w-xs mx-auto text-white font-bold text-center">
+                    <div id="ipm-chemical" data-level="chemical" class="ipm-level p-4 rounded-t-lg" style="background-color: #EF5350;">Chemical</div>
+                    <div id="ipm-biological" data-level="biological" class="ipm-level p-5" style="background-color: #FFA726;">Biological</div>
+                    <div id="ipm-mechanical" data-level="mechanical" class="ipm-level p-6" style="background-color: #66BB6A;">Mechanical/Physical</div>
+                    <div id="ipm-cultural" data-level="cultural" class="ipm-level p-7 rounded-b-lg" style="background-color: #42A5F5;">Cultural</div>
+                </div>
+                <div id="ipm-description" class="bg-white p-6 rounded-lg border border-gray-200 min-h-[250px]">
+                    <h3 id="ipm-title" class="text-xl font-bold text-[#5D4037] mb-2">Click a level to learn more</h3>
+                    <p id="ipm-text" class="text-gray-700">The IPM pyramid illustrates the strategy of building from the ground up. Foundational methods should be used first, with more intensive methods reserved for when necessary.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="lab" class="pt-16">
+            <h2 class="text-3xl font-bold text-center text-[#4E342E] mb-2">Interactive Field Lab</h2>
+            <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">Test your knowledge! Examine the tree samples below and identify the most likely biotic threat based on the signs and symptoms shown. Click your choice to see if you're correct.</p>
+
+            <div id="quiz-container" class="bg-white p-8 rounded-lg shadow-sm border border-gray-200">
+                <div id="quiz-question-area">
+                </div>
+                <div id="quiz-feedback" class="mt-4 text-center font-medium h-6"></div>
+                <div class="flex justify-center mt-6">
+                    <button id="next-question-btn" class="py-2 px-6 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition duration-300 hidden">Next Sample</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="bg-[#EFEBE9] mt-24">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-gray-600">
+            <p>Forest Health Educational Module</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const diseaseTabs = document.querySelectorAll('.disease-tab');
+            const diseasePanels = document.querySelectorAll('.disease-panel');
+            const pestTabs = document.querySelectorAll('.pest-tab');
+            const pestPanels = document.querySelectorAll('.pest-panel');
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            function initTabs(tabs, panels) {
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        tabs.forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        const target = document.getElementById(tab.dataset.target);
+                        panels.forEach(p => p.classList.add('hidden'));
+                        target.classList.remove('hidden');
+                    });
+                });
+                if (tabs.length > 0) {
+                    tabs[0].click();
+                }
+            }
+            
+            initTabs(diseaseTabs, diseasePanels);
+            initTabs(pestTabs, pestPanels);
+
+            const diseaseImpactCtx = document.getElementById('diseaseImpactChart').getContext('2d');
+            const diseaseImpactChart = new Chart(diseaseImpactCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Root Rot', 'Heart Rot', 'Cankers', 'Rusts', 'Vascular Wilts'],
+                    datasets: [{
+                        label: 'Relative Economic Impact Score',
+                        data: [85, 78, 60, 72, 55],
+                        backgroundColor: 'rgba(102, 187, 106, 0.6)',
+                        borderColor: 'rgba(56, 142, 60, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: { beginAtZero: true, grid: { color: '#eee' } },
+                        y: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: 'Comparative Impact of Forest Diseases' }
+                    }
+                }
+            });
+
+            const pestImpactCtx = document.getElementById('pestImpactChart').getContext('2d');
+            const pestImpactChart = new Chart(pestImpactCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Bark Beetles', 'Defoliators', 'Sap-sucking Insects', 'Wood Borers'],
+                    datasets: [{
+                        data: [55, 25, 10, 10],
+                        backgroundColor: ['#EF6C00', '#689F38', '#FBC02D', '#A1887F'],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        title: { display: true, text: 'Share of Insect-Related Tree Mortality' }
+                    }
+                }
+            });
+
+            const lifecycleSteps = document.querySelectorAll('.lifecycle-step');
+            const lifecycleDesc = document.getElementById('lifecycle-description');
+            let currentStage = 0;
+            const stageDescriptions = [
+                "The life cycle begins with eggs, which are often laid in masses on tree bark or twigs to survive the winter.",
+                "In spring, eggs hatch into larvae (caterpillars). This is the primary feeding stage, causing most of the defoliation.",
+                "After reaching full size, the larva enters the pupal stage, forming a chrysalis or cocoon to metamorphose.",
+                "The adult moth emerges, its main purpose being reproduction. Adults mate, and females lay eggs for the next generation."
+            ];
+
+            function updateLifecycle(stage) {
+                lifecycleSteps.forEach(step => {
+                    if (parseInt(step.dataset.stage) === stage) {
+                        step.classList.add('active');
+                    } else {
+                        step.classList.remove('active');
+                    }
+                });
+                lifecycleDesc.textContent = stageDescriptions[stage];
+            }
+            
+            document.getElementById('cycle-next').addEventListener('click', () => {
+                currentStage = (currentStage + 1) % lifecycleSteps.length;
+                updateLifecycle(currentStage);
+            });
+            document.getElementById('cycle-prev').addEventListener('click', () => {
+                currentStage = (currentStage - 1 + lifecycleSteps.length) % lifecycleSteps.length;
+                updateLifecycle(currentStage);
+            });
+            
+            updateLifecycle(currentStage);
+
+            const ipmLevels = document.querySelectorAll('.ipm-level');
+            const ipmTitle = document.getElementById('ipm-title');
+            const ipmText = document.getElementById('ipm-text');
+            const ipmInfo = {
+                cultural: {
+                    title: 'Cultural Controls',
+                    text: 'These are foundational practices that promote forest health and resilience. Examples include planting disease-resistant species, proper tree spacing to reduce competition, and thinning to improve vigor.'
+                },
+                mechanical: {
+                    title: 'Mechanical/Physical Controls',
+                    text: 'These methods physically remove or block pests. This includes pruning infected branches, setting traps for insects, and removing trees that are heavily infested to prevent spread.'
+                },
+                biological: {
+                    title: 'Biological Controls',
+                    text: 'Using nature against itself. This involves introducing or encouraging natural predators, parasites, or pathogens that specifically target the pest species, reducing their populations.'
+                },
+                chemical: {
+                    title: 'Chemical Controls',
+                    text: 'The use of pesticides. In IPM, this is a last resort. It involves selecting the most targeted, least-toxic options and applying them carefully to minimize harm to non-target organisms and the environment.'
+                }
+            };
+
+            ipmLevels.forEach(level => {
+                level.addEventListener('click', () => {
+                    const data = ipmInfo[level.dataset.level];
+                    ipmTitle.textContent = data.title;
+                    ipmText.textContent = data.text;
+                });
+            });
+            
+            const quizData = [
+                {
+                    question: "You find a pine tree with popcorn-like blobs of resin on the bark. Underneath, you see S-shaped tunnels.",
+                    visual: `<div class="w-full h-48 bg-[#A1887F] rounded-lg flex items-center justify-center p-4 border-4 border-[#6D4C41]"><div class="text-white text-center">Popcorn-like <span class="text-yellow-200">pitch tubes</span> and S-shaped galleries under bark.</div></div>`,
+                    options: ["Root Rot", "Bark Beetles", "Gypsy Moth"],
+                    answer: "Bark Beetles"
+                },
+                {
+                    question: "An oak tree's leaves are almost completely eaten away by mid-summer. You see small caterpillars on the remaining leaves.",
+                    visual: `<div class="w-full h-48 bg-green-200 rounded-lg flex items-center justify-center p-4 border-4 border-green-800"><div class="text-green-900 text-center">Leaves are skeletonized or completely eaten. 🐛 present.</div></div>`,
+                    options: ["Defoliator Insect", "White Pine Blister Rust", "Heart Rot"],
+                    answer: "Defoliator Insect"
+                },
+                {
+                    question: "A large, shelf-like fungus (conk) is growing out of the side of a mature fir tree's trunk.",
+                    visual: `<div class="w-full h-48 bg-[#6D4C41] rounded-lg flex items-center justify-center p-4 border-4 border-[#4E342E]"><div class="text-white text-center">Large, woody <span class="text-orange-300">conk</span> protruding from trunk.</div></div>`,
+                    options: ["Canker Disease", "Wood Rot", "Bark Beetles"],
+                    answer: "Wood Rot"
+                },
+                {
+                    question: "A white pine branch is swollen and has bright orange pustules breaking through the bark.",
+                    visual: `<div class="w-full h-48 bg-gray-400 rounded-lg flex items-center justify-center p-4 border-4 border-gray-600"><div class="text-white text-center">Swollen branch with <span class="text-orange-500 font-bold">orange powdery spores</span>.</div></div>`,
+                    options: ["Rust Disease", "Defoliator Insect", "Root Rot"],
+                    answer: "Rust Disease"
+                }
+            ];
+
+            let currentQuestionIndex = 0;
+            const questionArea = document.getElementById('quiz-question-area');
+            const feedbackArea = document.getElementById('quiz-feedback');
+            const nextBtn = document.getElementById('next-question-btn');
+
+            function loadQuestion() {
+                const question = quizData[currentQuestionIndex];
+                questionArea.innerHTML = `
+                    <p class="text-center text-lg text-gray-700 mb-4">${question.question}</p>
+                    <div class="mb-6">${question.visual}</div>
+                    <div class="grid sm:grid-cols-3 gap-4">
+                        ${question.options.map(opt => `<button class="quiz-option w-full py-3 px-4 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">${opt}</button>`).join('')}
+                    </div>
+                `;
+                document.querySelectorAll('.quiz-option').forEach(btn => {
+                    btn.addEventListener('click', handleAnswer);
+                });
+                feedbackArea.textContent = '';
+                nextBtn.classList.add('hidden');
+            }
+
+            function handleAnswer(e) {
+                const selected = e.target.textContent;
+                const correct = quizData[currentQuestionIndex].answer;
+                document.querySelectorAll('.quiz-option').forEach(btn => btn.disabled = true);
+                if (selected === correct) {
+                    feedbackArea.textContent = "Correct! Well done.";
+                    feedbackArea.style.color = 'green';
+                    e.target.style.backgroundColor = '#66BB6A';
+                    e.target.style.color = 'white';
+                } else {
+                    feedbackArea.textContent = `Not quite. The correct answer is ${correct}.`;
+                    feedbackArea.style.color = 'red';
+                    e.target.style.backgroundColor = '#EF5350';
+                    e.target.style.color = 'white';
+                }
+                nextBtn.classList.remove('hidden');
+                if (currentQuestionIndex === quizData.length - 1) {
+                    nextBtn.textContent = 'Restart Lab';
+                } else {
+                    nextBtn.textContent = 'Next Sample';
+                }
+            }
+
+            nextBtn.addEventListener('click', () => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex >= quizData.length) {
+                    currentQuestionIndex = 0;
+                }
+                loadQuestion();
+            });
+
+            loadQuestion();
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
+                        });
+                    }
+                });
+            }, { rootMargin: '-50% 0px -50% 0px' });
+
+            document.querySelectorAll('section').forEach(section => observer.observe(section));
+
+        });
+    </script>
+</body>
+</html>
