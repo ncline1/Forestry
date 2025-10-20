@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 10: The Nature of Wildfire</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Earthy Harmony -->
+    <!-- Application Structure Plan: The SPA is designed as a digital textbook chapter with a three-tab navigation system corresponding to the sections (10.1, 10.2, 10.3). This thematic structure is more intuitive for learning than a long scroll, allowing users to focus on one core concept at a time: the fundamentals (Fire Triangle), the dynamics (Fire Behavior), and the classification/impact (Fire Types & Ecology). The user flow is from foundational knowledge to complex applications. Key interactions include clickable diagrams, a behavior simulator with sliders, and informational cards, chosen to transform passive reading into active exploration and reinforce cause-and-effect relationships. -->
+    <!-- Visualization & Content Choices: 
+        1. Fire Triangle (10.1): Report Info -> Core components of fire. Goal -> Inform. Viz/Presentation -> Interactive diagram (HTML/CSS/JS). Interaction -> Click on a component (Fuel, Heat, Oxygen) to display its detailed description. Justification -> Reinforces the concept that all three elements are necessary by making the user actively select each one. Method -> HTML divs styled with Tailwind and controlled by JS event listeners.
+        2. Fire Behavior Simulator (10.2): Report Info -> How topography, weather, and fuel affect fire spread. Goal -> Demonstrate relationships. Viz/Presentation -> Sliders controlling a simple canvas animation. Interaction -> User adjusts sliders for Wind, Slope, and Humidity to see a visual change in fire spread rate and intensity. Justification -> Provides a powerful, immediate visual feedback loop for complex environmental interactions, making abstract concepts concrete. Method -> HTML range inputs and a Canvas element managed by a JS animation loop.
+        3. Fire Types & Ecological Role Chart (10.3): Report Info -> Classification of fires and their ecological benefits. Goal -> Compare & Inform. Viz/Presentation -> Clickable info cards for fire types and a bar chart for ecological roles. Interaction -> Clicking cards reveals details; chart tooltips provide more information. Justification -> Cards allow for easy comparison of fire types. The chart quantifies abstract benefits like 'nutrient cycling', making the ecological role of fire more tangible. Method -> HTML/JS for cards, Chart.js for the bar chart.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #4B423B;
+        }
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn.active {
+            background-color: #A47854;
+            color: #FFFFFF;
+            font-weight: 600;
+        }
+        .nav-btn:not(.active):hover {
+            background-color: #E9E2D9;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .interactive-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .interactive-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+
+        <header class="text-center mb-8 md:mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-[#A47854]">Chapter 10: The Nature of Wildfire</h1>
+            <p class="text-lg text-gray-600 mt-2">An introduction to the fundamental elements, behaviors, and ecological roles of fire in forestry.</p>
+        </header>
+
+        <nav class="flex justify-center mb-8 md:mb-12 bg-[#E9E2D9] rounded-full p-1.5 shadow-inner">
+            <button data-target="section-10-1" class="nav-btn active flex-1 py-2 px-4 rounded-full text-sm md:text-base">10.1 The Fire Triangle</button>
+            <button data-target="section-10-2" class="nav-btn flex-1 py-2 px-4 rounded-full text-sm md:text-base">10.2 Wildfire Behavior</button>
+            <button data-target="section-10-3" class="nav-btn flex-1 py-2 px-4 rounded-full text-sm md:text-base">10.3 Fire Types & Ecology</button>
+        </nav>
+
+        <main>
+            <section id="section-10-1" class="content-section active">
+                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg">
+                    <h2 class="text-2xl md:text-3xl font-bold text-[#A47854] mb-4">10.1 The Fire Triangle: Fuel, Oxygen, and Heat</h2>
+                    <p class="mb-6 text-gray-700">All wildfires, from a small grass fire to a massive forest fire, require three essential components to ignite and spread. These components form what is known as the "Fire Triangle." The removal of any one of these elements will extinguish the fire. This section breaks down each component and its role in a wildland setting. Click on each element of the triangle below to learn more.</p>
+                    <div class="flex flex-col md:flex-row gap-8 items-center">
+                        <div class="w-full md:w-1/2">
+                            <div id="fire-triangle-diagram" class="relative w-64 h-56 md:w-80 md:h-72 mx-auto">
+                                <div class="triangle-leg absolute w-full h-2 bg-[#D9A066] transform rotate-60 origin-bottom-left" style="top:3px; left:1px;"></div>
+                                <div class="triangle-leg absolute w-full h-2 bg-[#D9A066] transform -rotate-60 origin-bottom-right" style="top:3px; right:1px;"></div>
+                                <div class="triangle-leg absolute w-full h-2 bg-[#D9A066] bottom-0"></div>
+                                <button data-target="info-heat" class="triangle-point absolute top-[-20px] left-1/2 -translate-x-1/2 p-3 rounded-full bg-white shadow-md hover:shadow-lg cursor-pointer transition w-28 text-center border-2 border-transparent focus:border-[#BF4D28]">
+                                    <span class="text-4xl">🔥</span><br>Heat
+                                </button>
+                                <button data-target="info-fuel" class="triangle-point absolute bottom-[-20px] left-[15%] -translate-x-1/2 p-3 rounded-full bg-white shadow-md hover:shadow-lg cursor-pointer transition w-28 text-center border-2 border-transparent focus:border-[#7A9E5A]">
+                                    <span class="text-4xl">🌲</span><br>Fuel
+                                </button>
+                                <button data-target="info-oxygen" class="triangle-point absolute bottom-[-20px] right-[15%] translate-x-1/2 p-3 rounded-full bg-white shadow-md hover:shadow-lg cursor-pointer transition w-28 text-center border-2 border-transparent focus:border-[#6C91C2]">
+                                     <span class="text-4xl">🌬️</span><br>Oxygen
+                                </button>
+                            </div>
+                        </div>
+                        <div class="w-full md:w-1/2">
+                            <div id="triangle-info-display" class="p-6 bg-[#FDFBF8] rounded-lg border border-[#E9E2D9] min-h-[200px]">
+                                <div id="info-heat" class="info-text hidden">
+                                    <h3 class="text-xl font-bold mb-2 text-[#BF4D28]">Heat (Ignition Source)</h3>
+                                    <p>Heat is the energy required to raise fuel to its ignition temperature. In a wildland context, ignition sources can be natural, like lightning strikes, or human-caused. Human sources are more common and include unattended campfires, discarded cigarettes, sparks from equipment, and arson.</p>
+                                </div>
+                                <div id="info-fuel" class="info-text hidden">
+                                    <h3 class="text-xl font-bold mb-2 text-[#7A9E5A]">Fuel (Combustible Material)</h3>
+                                    <p>Fuel is any flammable material. In a forest, this includes everything from dead leaves, grass, and twigs (fine fuels) to shrubs, and large trees (heavy fuels). The type, moisture content, and arrangement of fuels heavily influence how a fire behaves. "Ladder fuels" can carry flames from the ground into the treetops.</p>
+                                </div>
+                                <div id="info-oxygen" class="info-text hidden">
+                                    <h3 class="text-xl font-bold mb-2 text-[#6C91C2]">Oxygen (Oxidizing Agent)</h3>
+                                    <p>Fire is a chemical reaction that requires an oxidizing agent, which is typically oxygen from the atmosphere. Air contains about 21% oxygen, which is more than enough to sustain a wildfire. Wind can increase the supply of oxygen, causing a fire to burn more rapidly and intensely.</p>
+                                </div>
+                                <p id="info-default" class="text-gray-500">Select an element of the triangle to see its description.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="section-10-2" class="content-section">
+                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg">
+                    <h2 class="text-2xl md:text-3xl font-bold text-[#A47854] mb-4">10.2 Wildfire Behavior: The Influence of Environment</h2>
+                    <p class="mb-6 text-gray-700">Beyond the basic components for ignition, a fire's behavior—how fast it spreads, how intensely it burns, and in which direction it moves—is determined by three primary factors: topography, weather, and fuels. This is often called the "Fire Behavior Triangle." Use the simulator below to see how adjusting these key environmental variables can dramatically alter a fire's spread.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="md:col-span-1 p-6 bg-[#FDFBF8] rounded-lg border border-[#E9E2D9]">
+                            <h3 class="text-lg font-semibold mb-4">Control Panel</h3>
+                            <div class="space-y-6">
+                                <div>
+                                    <label for="wind-slider" class="block mb-2 font-medium">Wind Speed (<span id="wind-value">10</span> km/h)</label>
+                                    <input id="wind-slider" type="range" min="0" max="50" value="10" class="w-full">
+                                </div>
+                                <div>
+                                    <label for="slope-slider" class="block mb-2 font-medium">Slope (<span id="slope-value">5</span>°)</label>
+                                    <input id="slope-slider" type="range" min="0" max="30" value="5" class="w-full">
+                                </div>
+                                <div>
+                                    <label for="humidity-slider" class="block mb-2 font-medium">Relative Humidity (<span id="humidity-value">40</span>%)</label>
+                                    <input id="humidity-slider" type="range" min="10" max="100" value="40" class="w-full">
+                                </div>
+                                <button id="reset-sim" class="w-full py-2 bg-[#A47854] text-white rounded-lg hover:bg-opacity-90 transition">Reset Simulation</button>
+                            </div>
+                        </div>
+                        <div class="md:col-span-2 p-4 bg-gray-800 rounded-lg">
+                            <canvas id="fire-sim-canvas" class="w-full h-64 md:h-full rounded"></canvas>
+                        </div>
+                    </div>
+                    <div id="sim-explanation" class="mt-6 p-4 bg-[#FDFBF8] rounded-lg border border-[#E9E2D9]">
+                        <h4 class="font-bold">Current Behavior:</h4>
+                        <p id="sim-text" class="text-gray-700">Moderate fire spread with some spotting due to wind. The gentle slope slightly increases the rate of spread uphill.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="section-10-3" class="content-section">
+                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg">
+                    <h2 class="text-2xl md:text-3xl font-bold text-[#A47854] mb-4">10.3 Types of Wildfires and Their Ecological Roles</h2>
+                    <p class="mb-6 text-gray-700">Not all fires are the same. They can be classified based on the layer of fuel they are burning, which directly impacts their intensity, speed, and ecological effect. While often seen as destructive, fire is a natural and essential process in many ecosystems, playing a vital role in maintaining forest health. Explore the different types of fires and their benefits below.</p>
+                    
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 text-center">Classifications of Wildfire</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                        <div class="interactive-card bg-[#FDFBF8] p-6 rounded-lg border border-transparent hover:border-[#A47854] cursor-pointer" data-fire-type="ground">
+                            <h4 class="font-bold text-lg mb-2">🌍 Ground Fires</h4>
+                            <p>These are slow-moving, smoldering fires that burn organic matter in the soil, such as peat and thick layers of duff. They produce a lot of smoke but few flames and can burn for months.</p>
+                        </div>
+                        <div class="interactive-card bg-[#FDFBF8] p-6 rounded-lg border border-transparent hover:border-[#A47854] cursor-pointer" data-fire-type="surface">
+                            <h4 class="font-bold text-lg mb-2">🌿 Surface Fires</h4>
+                            <p>The most common type, surface fires burn fuels at ground level like leaf litter, grasses, and small shrubs. They move relatively quickly and are essential for clearing out underbrush in many ecosystems.</p>
+                        </div>
+                        <div class="interactive-card bg-[#FDFBF8] p-6 rounded-lg border border-transparent hover:border-[#A47854] cursor-pointer" data-fire-type="crown">
+                            <h4 class="font-bold text-lg mb-2">🔥 Crown Fires</h4>
+                            <p>The most intense and dangerous fires, which spread through the tops of trees (the canopy). They can move extremely fast, driven by strong winds, and are very difficult to control.</p>
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 text-center">The Ecological Role of Fire</h3>
+                    <p class="mb-6 text-center text-gray-700 max-w-3xl mx-auto">In many forest ecosystems, periodic, low-intensity fires are crucial for health and renewal. They prevent the buildup of dense fuels that could lead to catastrophic fires, recycle nutrients, and create diverse habitats.</p>
+                    <div class="chart-container">
+                        <canvas id="ecology-chart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navButtons = document.querySelectorAll('.nav-btn');
+            const contentSections = document.querySelectorAll('.content-section');
+
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+
+                    const targetId = button.getAttribute('data-target');
+                    contentSections.forEach(section => {
+                        if (section.id === targetId) {
+                            section.classList.add('active');
+                        } else {
+                            section.classList.remove('active');
+                        }
+                    });
+                });
+            });
+
+            const trianglePoints = document.querySelectorAll('.triangle-point');
+            const infoTexts = document.querySelectorAll('.info-text');
+            const defaultInfo = document.getElementById('info-default');
+
+            trianglePoints.forEach(point => {
+                point.addEventListener('click', () => {
+                    const targetId = point.getAttribute('data-target');
+                    
+                    trianglePoints.forEach(p => p.classList.remove('ring-2', 'ring-offset-2', 'ring-blue-500'));
+                    point.classList.add('ring-2', 'ring-offset-2', 'ring-blue-500');
+
+                    infoTexts.forEach(text => {
+                        if (text.id === targetId) {
+                            text.classList.remove('hidden');
+                        } else {
+                            text.classList.add('hidden');
+                        }
+                    });
+                    defaultInfo.classList.add('hidden');
+                });
+            });
+
+            const fireSimCanvas = document.getElementById('fire-sim-canvas');
+            const ctx = fireSimCanvas.getContext('2d');
+            const windSlider = document.getElementById('wind-slider');
+            const slopeSlider = document.getElementById('slope-slider');
+            const humiditySlider = document.getElementById('humidity-slider');
+            const windValue = document.getElementById('wind-value');
+            const slopeValue = document.getElementById('slope-value');
+            const humidityValue = document.getElementById('humidity-value');
+            const simText = document.getElementById('sim-text');
+            const resetBtn = document.getElementById('reset-sim');
+            
+            let particles = [];
+            let animationFrameId;
+
+            function resizeCanvas() {
+                fireSimCanvas.width = fireSimCanvas.clientWidth;
+                fireSimCanvas.height = fireSimCanvas.clientHeight;
+            }
+
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            function createParticle(x, y) {
+                const size = Math.random() * 5 + 2;
+                const wind = (windSlider.value / 50) * 3;
+                const slope = (slopeSlider.value / 30) * 1.5;
+                const humidityEffect = 1 - (humiditySlider.value / 100);
+
+                return {
+                    x: x,
+                    y: y,
+                    size: size,
+                    speedX: (Math.random() - 0.5) * 2 + wind,
+                    speedY: -(Math.random() * 2 + 1 + slope) * humidityEffect,
+                    life: Math.random() * 60 + 30,
+                    color: `rgba(${200 + Math.random()*55}, ${50 + Math.random() * 80}, 0, ${Math.random()})`
+                };
+            }
+
+            function updateAndDrawParticles() {
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    let p = particles[i];
+                    p.x += p.speedX;
+                    p.y += p.speedY;
+                    p.life--;
+
+                    if (p.life <= 0) {
+                        particles.splice(i, 1);
+                        continue;
+                    }
+                    
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2, false);
+                    ctx.fillStyle = p.color;
+                    ctx.fill();
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, fireSimCanvas.width, fireSimCanvas.height);
+                
+                const startX = fireSimCanvas.width / 2;
+                const startY = fireSimCanvas.height - 10;
+                const humidityEffect = 1 - (humiditySlider.value / 100);
+                const particleCount = (windSlider.value / 50 + slopeSlider.value / 30 + 0.5) * 5 * humidityEffect;
+
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push(createParticle(startX + (Math.random() - 0.5) * 80, startY));
+                }
+
+                updateAndDrawParticles();
+                animationFrameId = requestAnimationFrame(animate);
+            }
+
+            function stopAnimation() {
+                 if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                }
+            }
+            
+            function startSimulation() {
+                stopAnimation();
+                particles = [];
+                animate();
+            }
+
+            function updateSimExplanation() {
+                const wind = parseInt(windSlider.value);
+                const slope = parseInt(slopeSlider.value);
+                const humidity = parseInt(humiditySlider.value);
+                windValue.textContent = wind;
+                slopeValue.textContent = slope;
+                humidityValue.textContent = humidity;
+
+                let text = "Fire behavior is currently ";
+                if (humidity > 70) {
+                    text += "very subdued due to high humidity. ";
+                } else if (wind < 5 && slope < 5 && humidity > 50) {
+                    text += "calm, with slow spread. ";
+                } else if (wind > 30 || slope > 20) {
+                    text += "extreme, with rapid spread uphill and long-range spotting from high winds. ";
+                } else if (wind > 15 || slope > 10) {
+                    text += "active, with moderate spread and some short-range spotting. ";
+                } else {
+                    text += "moderate, influenced by local conditions. ";
+                }
+                
+                if (humidity < 30) {
+                    text += "Low humidity makes fuels highly receptive to ignition.";
+                }
+
+                simText.textContent = text;
+            }
+
+            [windSlider, slopeSlider, humiditySlider].forEach(slider => {
+                slider.addEventListener('input', updateSimExplanation);
+                slider.addEventListener('change', startSimulation); 
+            });
+
+            resetBtn.addEventListener('click', () => {
+                windSlider.value = 10;
+                slopeSlider.value = 5;
+                humiditySlider.value = 40;
+                updateSimExplanation();
+                startSimulation();
+            });
+
+            startSimulation();
+            updateSimExplanation();
+
+            const chartCtx = document.getElementById('ecology-chart').getContext('2d');
+            const ecologyChart = new Chart(chartCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Nutrient Cycling', 'Pest & Disease Control', 'Promotes New Growth', 'Maintains Fire-Adapted Species', 'Reduces Fuel Buildup'],
+                    datasets: [{
+                        label: 'Relative Ecological Impact',
+                        data: [90, 75, 85, 60, 95],
+                        backgroundColor: [
+                            '#A47854',
+                            '#7A9E5A',
+                            '#D9A066',
+                            '#6C91C2',
+                            '#BF4D28'
+                        ],
+                        borderColor: '#FDFBF8',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Key Ecological Benefits of Controlled Fire',
+                            font: {
+                                size: 18,
+                                weight: 'bold'
+                            },
+                            color: '#4B423B',
+                            padding: {
+                                bottom: 20
+                            }
+                        },
+                        tooltip: {
+                           callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y + '%';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                             ticks: {
+                                callback: function(value) {
+                                    return value + "%"
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 20,
+                                minRotation: 0
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
