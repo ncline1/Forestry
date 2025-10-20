@@ -11,7 +11,7 @@
     <!-- Application Structure Plan: The SPA is designed as a digital textbook chapter with a three-tab navigation system corresponding to the sections (10.1, 10.2, 10.3). This thematic structure is more intuitive for learning than a long scroll, allowing users to focus on one core concept at a time: the fundamentals (Fire Triangle), the dynamics (Fire Behavior), and the classification/impact (Fire Types & Ecology). The user flow is from foundational knowledge to complex applications. Key interactions include clickable diagrams, a behavior simulator with sliders, and informational cards, chosen to transform passive reading into active exploration and reinforce cause-and-effect relationships. -->
     <!-- Visualization & Content Choices: 
         1. Fire Triangle (10.1): Report Info -> Core components of fire. Goal -> Inform. Viz/Presentation -> Interactive diagram (HTML/CSS/JS). Interaction -> Click on a component (Fuel, Heat, Oxygen) to display its detailed description. Justification -> Reinforces the concept that all three elements are necessary by making the user actively select each one. Method -> HTML divs styled with Tailwind and controlled by JS event listeners.
-        2. Fire Behavior Simulator (10.2): Report Info -> How topography, weather, and fuel affect fire spread. Goal -> Demonstrate relationships. Viz/Presentation -> Sliders controlling a simple canvas animation. Interaction -> User adjusts sliders for Wind, Slope, and Humidity to see a visual change in fire spread rate and intensity. Justification -> Provides a powerful, immediate visual feedback loop for complex environmental interactions, making abstract concepts concrete. Method -> HTML range inputs and a Canvas element managed by a JS animation loop.
+        2. Fire Behavior Simulator (10.2): Report Info -> How topography, weather, and fuel affect fire spread. Goal -> Demonstrate relationships. Viz/Presentation -> Sliders controlling a simple canvas animation. Interaction -> User adjusts sliders for Wind, Slope, and Humidity to see a visual change in fire spread rate and intensity. Justification -> Provides a powerful, immediate visual feedback loop for complex environmental interactions, making abstract concepts concrete. Method -> HTML range inputs and a Canvas element managed by a JS animation loop. (FIXED: Simulation now starts only when tab is active.)
         3. Fire Types & Ecological Role Chart (10.3): Report Info -> Classification of fires and their ecological benefits. Goal -> Compare & Inform. Viz/Presentation -> Clickable info cards for fire types and a bar chart for ecological roles. Interaction -> Clicking cards reveals details; chart tooltips provide more information. Justification -> Cards allow for easy comparison of fire types. The chart quantifies abstract benefits like 'nutrient cycling', making the ecological role of fire more tangible. Method -> HTML/JS for cards, Chart.js for the bar chart.
     -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
@@ -189,6 +189,7 @@
             const navButtons = document.querySelectorAll('.nav-btn');
             const contentSections = document.querySelectorAll('.content-section');
 
+            // --- NAVIGATION LOGIC (UPDATED FOR SIMULATOR) ---
             navButtons.forEach(button => {
                 button.addEventListener('click', () => {
                     navButtons.forEach(btn => btn.classList.remove('active'));
@@ -198,13 +199,23 @@
                     contentSections.forEach(section => {
                         if (section.id === targetId) {
                             section.classList.add('active');
+                            if (targetId === 'section-10-2') {
+                                // FIX: Resize and start simulation only when the tab is visible
+                                resizeCanvas(); 
+                                startSimulation();
+                            }
                         } else {
                             section.classList.remove('active');
+                            if (section.id === 'section-10-2') {
+                                // Stop simulation when moving away from the tab
+                                stopAnimation(); 
+                            }
                         }
                     });
                 });
             });
 
+            // --- 10.1 FIRE TRIANGLE LOGIC ---
             const trianglePoints = document.querySelectorAll('.triangle-point');
             const infoTexts = document.querySelectorAll('.info-text');
             const defaultInfo = document.getElementById('info-default');
@@ -227,6 +238,7 @@
                 });
             });
 
+            // --- 10.2 WILDFIRE BEHAVIOR SIMULATOR LOGIC ---
             const fireSimCanvas = document.getElementById('fire-sim-canvas');
             const ctx = fireSimCanvas.getContext('2d');
             const windSlider = document.getElementById('wind-slider');
@@ -242,12 +254,14 @@
             let animationFrameId;
 
             function resizeCanvas() {
-                fireSimCanvas.width = fireSimCanvas.clientWidth;
-                fireSimCanvas.height = fireSimCanvas.clientHeight;
+                // Ensure clientWidth/Height are non-zero (i.e., the element is visible)
+                if (fireSimCanvas.clientWidth > 0 && fireSimCanvas.clientHeight > 0) {
+                    fireSimCanvas.width = fireSimCanvas.clientWidth;
+                    fireSimCanvas.height = fireSimCanvas.clientHeight;
+                }
             }
 
             window.addEventListener('resize', resizeCanvas);
-            resizeCanvas();
 
             function createParticle(x, y) {
                 const size = Math.random() * 5 + 2;
@@ -304,6 +318,10 @@
             function stopAnimation() {
                  if (animationFrameId) {
                     cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null; 
+                    particles = [];
+                    // Clear the canvas when stopping
+                    ctx.clearRect(0, 0, fireSimCanvas.width, fireSimCanvas.height);
                 }
             }
             
@@ -343,6 +361,8 @@
 
             [windSlider, slopeSlider, humiditySlider].forEach(slider => {
                 slider.addEventListener('input', updateSimExplanation);
+                // 'change' event might be too infrequent for real-time visualization, 
+                // but we keep it here to re-start animation if needed.
                 slider.addEventListener('change', startSimulation); 
             });
 
@@ -354,9 +374,9 @@
                 startSimulation();
             });
 
-            startSimulation();
-            updateSimExplanation();
+            updateSimExplanation(); 
 
+            // --- 10.3 FIRE ECOLOGY CHART LOGIC ---
             const chartCtx = document.getElementById('ecology-chart').getContext('2d');
             const ecologyChart = new Chart(chartCtx, {
                 type: 'bar',
