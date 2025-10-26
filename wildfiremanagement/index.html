@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infographic: Modern Wildland Fire Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Chosen Palette: Brilliant Blues (Hex: #003F63, #006094, #0088D1, #4DADDD, #99D1ED) with Orange Accent -->
+    <!-- Narrative Plan: The infographic tells a linear story of wildfire management. It starts with the 3 high-level strategic goals (The Triad). It then moves to the technology used for "seeing" the problem (Detection & Prediction). Next, it covers the "action" (Suppression Tactics & Resources). It concludes with the long-term, human-centric aspect (Community & WUI), showing how we adapt. This flow moves from broad strategy to specific action and future resilience. -->
+    <!-- Visualization Choices: 1. Mgmt Triad (Data: 3 concepts) -> Goal: Organize -> Viz: 3-column HTML/Tailwind cards with Unicode icons. Justification: Clearest, simplest way to show 3 equal pillars without SVG. 2. Detection Methods (Data: 4 methods) -> Goal: Organize -> Viz: Horizontal HTML/Tailwind flowchart. Justification: Shows a process/sequence of modern detection. 3. Prediction Systems (Data: 3 systems, 5 attributes) -> Goal: Compare -> Viz: Radar Chart (Chart.js). Justification: Perfect for comparing multiple items across multiple attributes. 4. Suppression Strategies (Data: 3 tactics) -> Goal: Compare -> Viz: 3-column HTML/Tailwind cards. Justification: Simple, clear comparison. 5. Suppression Resources (Data: 5 resources, 4 attributes) -> Goal: Compare -> Viz: Grouped Bar Chart (Chart.js). Justification: Ideal for comparing sub-categories (ground/aerial) across shared metrics. 6. Defensible Space (Data: 3 zones) -> Goal: Inform/Compare -> Viz: Donut Chart (Chart.js) + HTML/Tailwind diagram. Justification: Donut shows relative *importance* (ember defense), HTML diagram shows *spatial layout*. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f9ff;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 640px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        @media (min-width: 1024px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .header-blue {
+            color: #003F63;
+        }
+        .text-blue-mid {
+            color: #006094;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="container mx-auto max-w-6xl p-4 md:p-8">
+
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold header-blue mb-4">The New Age of Wildland Fire Management</h1>
+            <p class="text-xl text-blue-mid max-w-3xl mx-auto">From high-level strategy to AI-powered technology and community resilience, explore how we manage wildfire today.</p>
+        </header>
+
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold header-blue text-center mb-8">1. The Management Triad: A Guiding Strategy</h2>
+            <p class="text-lg text-center text-blue-mid max-w-3xl mx-auto mb-10">Modern fire management is not just about putting fires out. It's a balance of three core principles that guide all operations and policy, ensuring both public safety and ecological health.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="card text-center">
+                    <span class="text-5xl">🚫</span>
+                    <h3 class="text-2xl font-semibold text-orange-600 my-2">Prevention</h3>
+                    <p>Aims to reduce unwanted human-caused ignitions through public education, activity restrictions, and engineering solutions for infrastructure like power lines.</p>
+                </div>
+                <div class="card text-center">
+                    <span class="text-5xl">🧑‍🚒</span>
+                    <h3 class="text-2xl font-semibold text-orange-600 my-2">Suppression</h3>
+                    <p>The operational response to extinguish or contain active wildfires, prioritizing the protection of life, property, and critical natural resources.</p>
+                </div>
+                <div class="card text-center">
+                    <span class="text-5xl">🔥</span>
+                    <h3 class="text-2xl font-semibold text-orange-600 my-2">Fire Use</h3>
+                    <p>The intentional use of fire (prescribed burns) under controlled conditions to reduce hazardous fuels, restore ecosystems, and improve landscape resilience.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-16 card">
+            <h2 class="text-3xl font-bold header-blue text-center mb-8">2. High-Tech Watch: Detection & Prediction</h2>
+            <p class="text-lg text-center text-blue-mid max-w-3xl mx-auto mb-10">Finding and forecasting fires is no longer just about watchtowers. A revolution in technology allows agencies to detect fires in minutes and predict their behavior with growing accuracy.</p>
+            
+            <h3 class="text-2xl font-semibold text-blue-mid mb-4">The Evolution of Detection</h3>
+            <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 md:space-x-4">
+                <div class="text-center p-4 bg-blue-50 rounded-lg shadow-inner">
+                    <h4 class="font-bold">Traditional</h4>
+                    <p class="text-sm">Lookouts & 911 Calls</p>
+                </div>
+                <span class="text-3xl text-blue-mid hidden md:block">→</span>
+                <div class="text-center p-4 bg-blue-100 rounded-lg shadow-inner">
+                    <h4 class="font-bold">Satellite</h4>
+                    <p class="text-sm">GEO/LEO Hotspot Alerts</p>
+                </div>
+                <span class="text-3xl text-blue-mid hidden md:block">→</span>
+                <div class="text-center p-4 bg-blue-200 rounded-lg shadow-inner">
+                    <h4 class="font-bold">AI Cameras</h4>
+                    <p class="text-sm">24/7 Smoke Detection</p>
+                </div>
+                <span class="text-3xl text-blue-mid hidden md:block">→</span>
+                <div class="text-center p-4 bg-blue-300 rounded-lg shadow-inner">
+                    <h4 class="font-bold">IoT Sensors</h4>
+                    <p class="text-sm">Acoustic & Air Sensors</p>
+                </div>
+            </div>
+            
+            <hr class="my-10 border-blue-200">
+
+            <h3 class="text-2xl font-semibold text-blue-mid mb-4">Comparing Prediction Systems</h3>
+            <p class="text-base text-blue-mid max-w-3xl mx-auto mb-6">Systems like Canada's Fire Weather Index (FWI) and Fire Behaviour Prediction (FBP) are now being enhanced by AI. This radar chart compares their capabilities across key metrics.</p>
+            <div class="chart-container mx-auto">
+                <canvas id="predictionRadarChart"></canvas>
+            </div>
+        </section>
+
+        <section class="mb-16 card">
+            <h2 class="text-3xl font-bold header-blue text-center mb-8">3. On the Line: Suppression Tactics & Resources</h2>
+            <p class="text-lg text-center text-blue-mid max-w-3xl mx-auto mb-10">When a fire must be fought, commanders deploy a range of strategies and resources. The choice depends on fire intensity, terrain, and values at risk.</p>
+
+            <h3 class="text-2xl font-semibold text-blue-mid mb-4">Core Attack Strategies</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div class="text-center p-4 bg-orange-50 rounded-lg shadow-inner">
+                    <h4 class="font-bold text-orange-700">Direct Attack</h4>
+                    <p class="text-sm">Working directly on the fire's edge. Used for low-intensity fires.</p>
+                </div>
+                <div class="text-center p-4 bg-orange-100 rounded-lg shadow-inner">
+                    <h4 class="font-bold text-orange-700">Parallel Attack</h4>
+                    <p class="text-sm">Building a line near the fire's edge and burning out the fuel in between.</p>
+                </div>
+                <div class="text-center p-4 bg-orange-200 rounded-lg shadow-inner">
+                    <h4 class="font-bold text-orange-700">Indirect Attack</h4>
+                    <p class="text-sm">Building a line far from the fire, using terrain or roads as an anchor.</p>
+                </div>
+            </div>
+
+            <h3 class="text-2xl font-semibold text-blue-mid mb-4">Comparing Ground & Aerial Resources</h3>
+            <p class="text-base text-blue-mid max-w-3xl mx-auto mb-6">No single tool does it all. This chart compares the general capabilities of different resources, from deployment speed and cost to their ability to access difficult terrain.</p>
+            <div class="chart-container mx-auto">
+                <canvas id="resourceBarChart"></canvas>
+            </div>
+        </section>
+        
+        <section class="mb-16 card">
+            <h2 class="text-3xl font-bold header-blue text-center mb-8">4. Living with Fire: The WUI & Defensible Space</h2>
+            <p class="text-lg text-center text-blue-mid max-w-3xl mx-auto mb-10">As more communities are built in the Wildland-Urban Interface (WUI), adapting to fire is essential. This starts with managing fuel in the landscape and right up to the home itself.</p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div>
+                    <h3 class="text-2xl font-semibold text-blue-mid mb-4">The Power of Defensible Space</h3>
+                    <p class="text-base text-blue-mid mb-6">A home's survival is often determined by its immediate surroundings. The "Immediate Zone" is most critical, as it's the primary defense against embers, which cause the majority of home ignitions.</p>
+                    <div class="chart-container" style="height: 250px; max-height: 250px;">
+                        <canvas id="wuiDonutChart"></canvas>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-semibold text-blue-mid mb-4">Visualizing the Zones</h3>
+                    <p class="text-base text-blue-mid mb-6">This diagram shows the three zones extending from a home, each with a different fuel management goal.</p>
+                    <div class="relative flex items-center justify-center p-4 rounded-lg bg-blue-50">
+                        <div class="absolute w-full h-full rounded-full bg-blue-300 opacity-50" style="max-width: 350px; max-height: 350px;"></div>
+                        <div class="absolute w-2/3 h-2/3 rounded-full bg-blue-200 opacity-75" style="max-width: 233px; max-height: 233px;"></div>
+                        <div class="absolute w-1/3 h-1/3 rounded-full bg-orange-200 opacity-100" style="max-width: 117px; max-height: 117px;"></div>
+                        
+                        <div class="relative z-10 text-center">
+                            <span class="text-4xl">🏠</span>
+                            <p class="font-bold text-gray-900">Home</p>
+                        </div>
+                        <div class="absolute z-10" style="top: 20px;">
+                            <span class="font-bold text-sm text-blue-900 bg-white/50 px-2 py-1 rounded">Zone 3 (30-100ft): Slow Spread</span>
+                        </div>
+                        <div class="absolute z-10" style="top: 100px; @media (min-width: 640px) { top: 120px; }">
+                            <span class="font-bold text-sm text-blue-800 bg-white/50 px-2 py-1 rounded">Zone 2 (5-30ft): Fuel Break</span>
+                        </div>
+                         <div class="absolute z-10" style="bottom: 80px; @media (min-width: 640px) { bottom: 120px; }">
+                            <span class="font-bold text-sm text-orange-800 bg-white/50 px-2 py-1 rounded">Zone 1 (0-5ft): Ember Defense</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            const tooltipCallback = {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                const item = tooltipItems[0];
+                                let label = item.chart.data.labels[item.dataIndex];
+                                if (Array.isArray(label)) {
+                                  return label.join(' ');
+                                } else {
+                                  return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            const predictionColors = {
+                fwi: '#006094',
+                fbp: '#0088D1',
+                ai: '#F97316'
+            };
+
+            new Chart(document.getElementById('predictionRadarChart'), {
+                type: 'radar',
+                data: {
+                    labels: [
+                        'Real-Time Speed', 
+                        ['Pinpoint', 'Accuracy'], 
+                        ['Data Input', 'Needs'], 
+                        ['Specific', 'Behavior'], 
+                        'Future Potential'
+                    ],
+                    datasets: [{
+                        label: 'FWI (Weather Index)',
+                        data: [4, 3, 2, 2, 1],
+                        borderColor: predictionColors.fwi,
+                        backgroundColor: 'rgba(0, 96, 148, 0.2)',
+                        pointBackgroundColor: predictionColors.fwi
+                    }, {
+                        label: 'FBP (Behavior Prediction)',
+                        data: [3, 4, 4, 4, 2],
+                        borderColor: predictionColors.fbp,
+                        backgroundColor: 'rgba(0, 136, 209, 0.2)',
+                        pointBackgroundColor: predictionColors.fbp
+                    }, {
+                        label: 'AI / Machine Learning',
+                        data: [5, 4, 5, 5, 5],
+                        borderColor: predictionColors.ai,
+                        backgroundColor: 'rgba(249, 115, 22, 0.2)',
+                        pointBackgroundColor: predictionColors.ai
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    ...tooltipCallback,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(0, 0, 0, 0.1)' },
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                            pointLabels: {
+                                font: {
+                                    size: 10
+                                }
+                            },
+                            ticks: {
+                                backdropColor: 'transparent',
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+
+            const resourceColors = {
+                ground: '#003F63',
+                aerial: '#4DADDD'
+            };
+
+            new Chart(document.getElementById('resourceBarChart'), {
+                type: 'bar',
+                data: {
+                    labels: [
+                        ['Speed/', 'Deployment'], 
+                        ['Cost', '(per hour)'], 
+                        ['Terrain', 'Access'], 
+                        ['Payload/', 'Power']
+                    ],
+                    datasets: [{
+                        label: 'Hand Crews',
+                        data: [1, 2, 5, 2],
+                        backgroundColor: resourceColors.ground
+                    }, {
+                        label: 'Engines',
+                        data: [3, 2, 2, 3],
+                        backgroundColor: resourceColors.ground,
+                        stack: 'ground'
+                    }, {
+                        label: 'Dozers',
+                        data: [2, 4, 1, 5],
+                        backgroundColor: resourceColors.ground,
+                        stack: 'ground'
+                    }, {
+                        label: 'Airtankers',
+                        data: [5, 5, 1, 4],
+                        backgroundColor: resourceColors.aerial
+                    }, {
+                        label: 'Helicopters',
+                        data: [4, 4, 4, 3],
+                        backgroundColor: resourceColors.aerial,
+                        stack: 'aerial'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    ...tooltipCallback,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Relative Capability Rating'
+                            }
+                        }
+                    }
+                }
+            });
+
+            const wuiColors = ['#F97316', '#0088D1', '#003F63'];
+
+            new Chart(document.getElementById('wuiDonutChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: [
+                        ['Zone 1 (0-5ft):', 'Ember Defense'], 
+                        ['Zone 2 (5-30ft):', 'Fuel Break'], 
+                        ['Zone 3 (30-100ft):', 'Slow Spread']
+                    ],
+                    datasets: [{
+                        label: 'Impact on Home Survival',
+                        data: [60, 30, 10],
+                        backgroundColor: wuiColors,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    ...tooltipCallback,
+                    plugins: {
+                        ...tooltipCallback.plugins,
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 20
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
