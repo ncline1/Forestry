@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 12: Managing for More Than Timber</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Calm Harmony (Forest Green, Moss Green, Tan, Off-white) -->
+    <!-- Application Structure Plan: The SPA is structured around the three explicit sections provided in the source report (12.1, 12.2, 12.3). This thematic structure is the most logical for a textbook chapter, as it allows students to focus on one topic at a time. The primary interaction is a tab-based navigation system at the top, which shows/hides the content for the selected section. This is a familiar and intuitive UI pattern for educational content. Each section then uses a combination of introductory text, interactive HTML/CSS diagrams (to avoid SVG), and Chart.js visualizations to explain key concepts. This design directly supports the user's goal of learning the chapter content by breaking it down into manageable, interactive chunks. -->
+    <!-- Visualization & Content Choices:
+        1.  Report Info: Chapter Sections (12.1, 12.2, 12.3). Goal: Organize. Viz/Method: HTML/Tailwind Tab Navigation. Interaction: Click to show/hide section content. Justification: Intuitive SPA navigation for thematic content. Library: Vanilla JS.
+        2.  Report Info: Watershed Concepts. Goal: Inform/Organize. Viz/Method: Interactive HTML/Tailwind diagram of a watershed. Interaction: Click on zones (Riparian, Upland, Harvest) to show/hide text blurbs. Justification: Visualizes spatial relationships and impacts interactively without SVG. Library: Vanilla JS.
+        3.  Report Info: Harvest Impact on Water Yield. Goal: Compare. Viz/Method: Chart.js Bar Chart. Interaction: Hover for tooltips. Justification: Clearly shows change between categories (pre/post-harvest). Library: Chart.js (Canvas).
+        4.  Report Info: Wildlife Habitat Layers. Goal: Inform/Organize. Viz/Method: Interactive HTML/Tailwind diagram (stacked divs). Interaction: Click on layers (Canopy, Understory, etc.) to show descriptive text. Justification: Simple, clear visualization of a vertical concept. Library: Vanilla JS.
+        5.  Report Info: Habitat Suitability. Goal: Compare. Viz/Method: Chart.js Radar Chart. Interaction: Hover for tooltips. Justification: Effectively compares multiple attributes (food, cover, water) for different species or management scenarios. Library: Chart.js (Canvas).
+        6.  Report Info: Recreation Opportunity Spectrum (ROS). Goal: Organize/Compare. Viz/Method: HTML/Tailwind styled table. Interaction: Static display. Justification: A table/matrix is the clearest and most standard way to present the ROS framework. Library: HTML/Tailwind.
+        7.  Report Info: Sustainable Trail Design. Goal: Inform. Viz/Method: HTML/Tailwind diagram. Interaction: Clickable hotspots for 'Switchback' and 'Water Bar' to show definitions. Justification: Illustrates physical design principles simply. Library: Vanilla JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        
+        .tab-btn {
+            @apply px-4 py-3 text-lg font-medium text-center rounded-t-lg transition-colors duration-200;
+        }
+        
+        .tab-btn.active {
+            @apply bg-white text-emerald-800 border-b-4 border-emerald-700;
+        }
+        
+        .tab-btn:not(.active) {
+            @apply text-white hover:bg-emerald-700;
+        }
+        
+        .tab-content {
+            @apply hidden p-6 md:p-10 bg-white rounded-b-lg shadow-lg;
+        }
+        
+        .tab-content.active {
+            @apply block;
+        }
+
+        .interactive-diagram-zone {
+            @apply transition-all duration-300 border-2 border-dashed border-transparent cursor-pointer hover:border-blue-500 hover:bg-blue-50;
+        }
+        
+        .interactive-diagram-text {
+            @apply hidden p-4 mt-2 bg-gray-100 rounded-lg;
+        }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-emerald-50 text-gray-800 antialiased">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-6xl">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-emerald-900">Week 12: Managing Forests for More Than Timber</h1>
+            <p class="text-xl text-emerald-700 mt-2">Exploring Watershed, Wildlife, & Recreation Management</p>
+        </header>
+
+        <nav class="flex flex-col sm:flex-row justify-center bg-emerald-800 rounded-t-lg shadow-md">
+            <button class="tab-btn active" data-tab="watershed">
+                <span class="mr-2">💧</span> 12.1: Watershed
+            </button>
+            <button class="tab-btn" data-tab="wildlife">
+                <span class="mr-2">🐾</span> 12.2: Wildlife
+            </button>
+            <button class="tab-btn" data-tab="recreation">
+                <span class="mr-2">🥾</span> 12.3: Recreation
+            </button>
+        </nav>
+
+        <main>
+            <!-- 12.1: Watershed Content -->
+            <section id="watershed" class="tab-content active">
+                <h2 class="text-3xl font-bold text-emerald-800 mb-4">12.1: Watershed Management</h2>
+                <p class="text-lg text-gray-700 mb-6">
+                    This section explores how forestry practices are deeply connected to the health of our water resources. A watershed is an area of land that drains all its water to a common outlet, like a river or lake. Forest management can significantly affect both the quantity (yield) and quality of water flowing from these areas. We'll look at potential impacts and the "Best Management Practices" (BMPs) foresters use to protect water.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div>
+                        <h3 class="text-2xl font-semibold text-emerald-800 mb-3">Interactive Watershed Diagram</h3>
+                        <p class="mb-4">Click on the different zones of this simplified watershed to learn about forestry impacts.</p>
+                        <div class="bg-white border border-gray-200 rounded-lg p-4">
+                            <div class="interactive-diagram-zone bg-green-200 rounded-lg p-4 mb-2" data-text-id="text-upland">
+                                Upland Forest (Click Me)
+                            </div>
+                            <div class="interactive-diagram-zone bg-yellow-200 rounded-lg p-4 mb-2" data-text-id="text-harvest">
+                                Harvest Area (Click Me)
+                            </div>
+                            <div class="interactive-diagram-zone bg-blue-200 rounded-lg p-4 mb-2" data-text-id="text-riparian">
+                                Riparian Zone / Buffer (Click Me)
+                            </div>
+                            <div class="bg-blue-500 text-white p-2 text-center rounded-b-lg">→ Stream →</div>
+                        </div>
+                        <div id="text-upland" class="interactive-diagram-text">
+                            <strong>Upland Forest:</strong> Healthy, intact forests act like a sponge. Tree roots and forest floor litter help water infiltrate the soil slowly, which recharges groundwater, filters water naturally, and prevents rapid, flashy runoff that can cause erosion.
+                        </div>
+                        <div id="text-harvest" class="interactive-diagram-text">
+                            <strong>Harvest Area:</strong> Removing tree cover can increase water yield because less water is taken up by trees (transpiration). However, exposed soil is vulnerable to erosion. Building forest roads improperly is a major source of sediment, which can pollute streams.
+                        </div>
+                        <div id="text-riparian" class="interactive-diagram-text">
+                            <strong>Riparian Zone:</strong> This is the critical buffer area directly adjacent to a stream. Leaving trees and vegetation intact here is a key BMP. It shades the stream (keeping water cool for fish), filters sediment from runoff, and stabilizes the stream banks.
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-semibold text-emerald-800 mb-3">Impact of Harvest on Water Yield</h3>
+                        <p class="mb-4">Timber harvesting can temporarily increase the amount of water flowing from a watershed. This chart shows a typical pattern.</p>
+                        <div class="chart-container bg-gray-50 p-4 rounded-lg shadow-inner">
+                            <canvas id="waterYieldChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="text-2xl font-semibold text-emerald-800 mb-3">Key Concepts: Best Management Practices (BMPs)</h3>
+                <p class="text-gray-700 mb-4">BMPs are the rules and techniques foresters follow to minimize environmental impact, especially on water. Click to expand.</p>
+                <details class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 cursor-pointer">
+                    <summary class="font-semibold text-lg text-emerald-900">Click to see common forestry BMPs for water</summary>
+                    <ul class="list-disc list-inside mt-4 space-y-2 text-gray-700">
+                        <li><strong>Streamside Management Zones (SMZs):</strong> Maintaining a protective buffer of trees and vegetation around all streams and water bodies (the Riparian Zone).</li>
+                        <li><strong>Proper Road Construction:</strong> Building roads with proper drainage (like water bars and culverts) to divert water off the road surface and prevent it from carrying sediment into streams.</li>
+                        <li><strong>Minimize Soil Compaction:</strong> Avoiding use of heavy machinery on wet soils to prevent "compacting" the soil, which reduces water infiltration and increases runoff.</li>
+                        <li><strong>Revegetate Disturbed Areas:</strong> Quickly replanting or seeding areas of exposed soil (like log landings) after a harvest to stabilize the soil and prevent erosion.</li>
+                    </ul>
+                </details>
+            </section>
+
+            <!-- 12.2: Wildlife Content -->
+            <section id="wildlife" class="tab-content">
+                <h2 class="text-3xl font-bold text-emerald-800 mb-4">12.2: Wildlife Habitat Management</h2>
+                <p class="text-lg text-gray-700 mb-6">
+                    Forests are more than just trees; they are complex ecosystems that provide habitat for countless wildlife species. Silviculture (the art and science of growing trees) can be a powerful tool to actively manage and enhance these habitats. This section explores how different forestry practices can be tailored to meet the needs (food, cover, water, and space) of specific wildlife.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div>
+                        <h3 class="text-2xl font-semibold text-emerald-800 mb-3">Forest Habitat Layers</h3>
+                        <p class="mb-4">Different species live in different "layers" of the forest. Click a layer to learn more.</p>
+                        <div class="space-y-1">
+                            <div class="interactive-diagram-zone h-16 bg-green-700 text-white flex items-center justify-center font-bold text-lg rounded-t-lg" data-text-id="text-canopy">
+                                Canopy
+                            </div>
+                            <div class="interactive-diagram-zone h-20 bg-green-500 text-white flex items-center justify-center font-bold text-lg" data-text-id="text-understory">
+                                Understory
+                            </div>
+                            <div class="interactive-diagram-zone h-16 bg-green-300 text-green-900 flex items-center justify-center font-bold text-lg" data-text-id="text-shrub">
+                                Shrub Layer
+                            </div>
+                            <div class="interactive-diagram-zone h-12 bg-yellow-600 text-white flex items-center justify-center font-bold text-lg" data-text-id="text-floor">
+                                Forest Floor
+                            </div>
+                            <div class="h-10 bg-gray-700 text-white flex items-center justify-center font-bold rounded-b-lg">Soil</div>
+                        </div>
+                         <div id="text-canopy" class="interactive-diagram-text">
+                            <strong>Canopy:</strong> The uppermost layer of mature trees. Home to many birds (e.g., warblers, hawks) and animals that feed on leaves, buds, or fruits (e.g., squirrels).
+                        </div>
+                        <div id="text-understory" class="interactive-diagram-text">
+                            <strong>Understory:</strong> Smaller trees and saplings growing beneath the main canopy. Provides cover and nesting sites for birds like the Wood Thrush.
+                        </div>
+                        <div id="text-shrub" class="interactive-diagram-text">
+                            <strong>Shrub Layer:</strong> Low-growing woody plants. This layer is critical for cover and food (berries) for species like deer, grouse, and rabbits.
+                        </div>
+                        <div id="text-floor" class="interactive-diagram-text">
+                            <strong>Forest Floor:</strong> Composed of leaf litter, herbs, fungi, and decaying wood (Coarse Woody Debris). Essential for salamanders, insects, shrews, and ground-foraging birds.
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-2xl font-semibold text-emerald-800 mb-3">Habitat Suitability</h3>
+                        <p class="mb-4">Management for one species (e.g., Ruffed Grouse, which needs young forest) can make habitat less suitable for another (e.g., Spotted Owl, which needs old-growth). This radar chart shows hypothetical habitat needs.</p>
+                        <div class="chart-container bg-gray-50 p-4 rounded-lg shadow-inner">
+                            <canvas id="habitatChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="text-2xl font-semibold text-emerald-800 mb-3">Silvicultural Tools for Habitat</h3>
+                <p class="text-gray-700 mb-4">Foresters can use specific techniques to create habitat features. Click the buttons to see what they are.</p>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button class="habitat-btn bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700" data-text-id="text-snags">Create Snags</button>
+                    <button class="habitat-btn bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700" data-text-id="text-cwd">Leave Coarse Woody Debris (CWD)</button>
+                    <button class="habitat-btn bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700" data-text-id="text-mast">Manage for Mast</button>
+                </div>
+                <div id="habitat-text-display" class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 min-h-[100px]">
+                    <p class="text-gray-600">Click a button above to learn about a technique.</p>
+                </div>
+                <div id="text-snags" class="hidden">
+                    <strong>Creating Snags (Dead Standing Trees):</strong> Snags are apartment complexes for wildlife. Woodpeckers excavate cavities, which are then used by bluebirds, owls, and flying squirrels. They are also hunting perches for hawks and eagles. Foresters may "girdle" (cut the bark around) a few trees to create new snags.
+                </div>
+                <div id="text-cwd" class="hidden">
+                    <strong>Leaving Coarse Woody Debris (CWD):</strong> These are logs and large branches left on the forest floor. They provide critical habitat for insects, salamanders, and fungi. As they decay, they return nutrients to the soil. Grouse often use logs for "drumming" displays.
+                </div>
+                <div id="text-mast" class="hidden">
+                    <strong>Managing for Mast:</strong> "Mast" refers to the fruits and nuts of trees (e.g., acorns, cherries, hickory nuts). Foresters can favor mast-producing trees like oaks during a harvest to ensure a reliable, high-energy food source for species like deer, bear, and turkey.
+                </div>
+            </section>
+
+            <!-- 12.3: Recreation Content -->
+            <section id="recreation" class="tab-content">
+                <h2 class="text-3xl font-bold text-emerald-800 mb-4">12.3: Forest Recreation Management</h2>
+                <p class="text-lg text-gray-700 mb-6">
+                    Forests provide invaluable opportunities for human recreation, from hiking and camping to hunting and birdwatching. Managing for recreation involves balancing human desires with the need to protect the forest ecosystem. This section covers the principles of matching people with the right experiences and managing the impacts they can have.
+                </p>
+
+                <h3 class="text-2xl font-semibold text-emerald-800 mb-3">Recreation Opportunity Spectrum (ROS)</h3>
+                <p class="text-gray-700 mb-6">ROS is a framework managers use to provide a diverse range of recreation experiences, from "Primitive" (high solitude, no facilities) to "Urban" (high traffic, many facilities). This table outlines the concept.</p>
+                <div class="overflow-x-auto shadow-md rounded-lg">
+                    <table class="w-full text-left text-sm text-gray-700">
+                        <thead class="bg-emerald-700 text-xs text-white uppercase">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Setting</th>
+                                <th scope="col" class="px-6 py-3">Access</th>
+                                <th scope="col" class="px-6 py-3">Facilities</th>
+                                <th scope="col" class="px-6 py-3">Social Encounters</th>
+                                <th scope="col" class="px-6 py-3">Example</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white">
+                            <tr class="border-b">
+                                <td class="px-6 py-4 font-medium">Primitive</td>
+                                <td class="px-6 py-4">Foot or horse only</td>
+                                <td class="px-6 py-4">None</td>
+                                <td class="px-6 py-4">Very Low</td>
+                                <td class="px-6 py-4">Wilderness Area</td>
+                            </tr>
+                            <tr class="bg-emerald-50 border-b">
+                                <td class="px-6 py-4 font-medium">Semi-Primitive</td>
+                                <td class="px-6 py-4">Rough trails, 4WD</td>
+                                <td class="px-6 py-4">Minimal (e.g., pit toilet)</td>
+                                <td class="px-6 py-4">Low</td>
+                                <td class="px-6 py-4">Backcountry Campsite</td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="px-6 py-4 font-medium">Roaded Natural</td>
+                                <td class="px-6 py-4">Paved or gravel roads</td>
+                                <td class="px-6 py-4">Moderate (e.g., campground)</td>
+                                <td class="px-6 py-4">Moderate</td>
+                                <td class="px-6 py-4">State Forest Park</td>
+                            </tr>
+                            <tr class="bg-emerald-50 border-b">
+                                <td class="px-6 py-4 font-medium">Rural</td>
+                                <td class="px-6 py-4">Paved roads</td>
+                                <td class="px-6 py-4">High (e.g., picnic areas)</td>
+                                <td class="px-6 py-4">High</td>
+                                <td class="px-6 py-4">County Park</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
+                    <div>
+                        <h3 class="text-2xl font-semibold text-emerald-800 mb-3">Sustainable Trail Design</h3>
+                        <p class="mb-4">Poorly designed trails cause erosion and are hard to maintain. Click the hotspots on the diagram to learn key principles.</p>
+                        <div class="relative bg-gray-100 border-2 border-gray-300 rounded-lg h-64 p-4">
+                            <div class="absolute top-4 left-4 text-sm font-bold">Hill Top</div>
+                            <div class="absolute bottom-4 right-4 text-sm font-bold">Hill Bottom</div>
+                            <div class="absolute top-1/2 left-1/4 h-16 w-32 bg-red-200 border-2 border-red-500 rounded p-2 text-center text-sm font-semibold">
+                                Bad: Trail straight down
+                                <br/>(Causes erosion)
+                            </div>
+                            <div class="absolute top-1/4 right-1/4 h-24 w-2 border-2 border-dashed border-blue-600"></div>
+                            <div class="absolute top-1/4 right-1/4 -mr-8 mt-10 interactive-diagram-zone p-1 bg-blue-100 rounded-full cursor-pointer" data-text-id="text-switchback">
+                                ⓘ Switchback
+                            </div>
+                            <div class="absolute top-3/4 left-1/3 h-1 w-20 bg-gray-700 transform -rotate-12"></div>
+                            <div class="absolute top-3/4 left-1/3 ml-20 -mt-4 interactive-diagram-zone p-1 bg-blue-100 rounded-full cursor-pointer" data-text-id="text-waterbar">
+                                ⓘ Water Bar
+                            </div>
+                        </div>
+                        <div id="text-switchback" class="interactive-diagram-text">
+                            <strong>Switchback:</strong> A sharp, zig-zag turn used to build a trail up a steep slope at a gentle, sustainable grade, preventing fast water flow and erosion.
+                        </div>
+                        <div id="text-waterbar" class="interactive-diagram-text">
+                            <strong>Water Bar:</strong> A log, rock, or mound of soil built diagonally across a trail to intercept water and divert it off the trail surface before it can gain speed and erode the path.
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-semibold text-emerald-800 mb-3">Managing Visitor Impacts</h3>
+                        <p class="mb-4">A key part of recreation management is minimizing the "footprint" left by visitors. The "Leave No Trace" principles are a core part of this.</p>
+                        <details class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 cursor-pointer">
+                            <summary class="font-semibold text-lg text-emerald-900">Click for 7 Principles of Leave No Trace</summary>
+                            <ul class="list-decimal list-inside mt-4 space-y-2 text-gray-700">
+                                <li>Plan Ahead and Prepare</li>
+                                <li>Travel and Camp on Durable Surfaces</li>
+                                <li>Dispose of Waste Properly (Pack it in, pack it out)</li>
+                                <li>Leave What You Find</li>
+                                <li>Minimize Campfire Impacts</li>
+                                <li>Respect Wildlife</li>
+                                <li>Be Considerate of Other Visitors</li>
+                            </ul>
+                        </details>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('.tab-btn');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const target = tab.getAttribute('data-tab');
+                    
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    contents.forEach(c => c.classList.remove('active'));
+                    document.getElementById(target).classList.add('active');
+                });
+            });
+
+            const interactiveZones = document.querySelectorAll('.interactive-diagram-zone');
+            const interactiveTexts = document.querySelectorAll('.interactive-diagram-text');
+
+            interactiveZones.forEach(zone => {
+                zone.addEventListener('click', () => {
+                    const textId = zone.getAttribute('data-text-id');
+                    const targetText = document.getElementById(textId);
+                    
+                    const isVisible = targetText.style.display === 'block';
+                    
+                    interactiveTexts.forEach(text => {
+                        text.style.display = 'none';
+                    });
+                    
+                    if (!isVisible) {
+                        targetText.style.display = 'block';
+                    }
+                });
+            });
+
+            const habitatBtns = document.querySelectorAll('.habitat-btn');
+            const habitatTextDisplay = document.getElementById('habitat-text-display');
+            habitatBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const textId = btn.getAttribute('data-text-id');
+                    const newText = document.getElementById(textId).innerHTML;
+                    habitatTextDisplay.innerHTML = newText;
+                });
+            });
+
+            if (document.getElementById('waterYieldChart')) {
+                const ctxWater = document.getElementById('waterYieldChart').getContext('2d');
+                new Chart(ctxWater, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Pre-Harvest', '1-5 Years Post-Harvest', '10+ Years Post-Harvest'],
+                        datasets: [{
+                            label: 'Average Annual Water Yield (Liters/sec)',
+                            data: [100, 135, 110],
+                            backgroundColor: [
+                                'rgba(56, 189, 248, 0.6)',
+                                'rgba(239, 68, 68, 0.6)',
+                                'rgba(16, 185, 129, 0.6)'
+                            ],
+                            borderColor: [
+                                'rgba(56, 189, 248, 1)',
+                                'rgba(239, 68, 68, 1)',
+                                'rgba(16, 185, 129, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Change in Water Yield After Timber Harvest'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += context.parsed.y + ' L/s';
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Water Yield (Liters/sec)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            if (document.getElementById('habitatChart')) {
+                const ctxHabitat = document.getElementById('habitatChart').getContext('2d');
+                new Chart(ctxHabitat, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Food (e.g., Mast)', 'Cover (Dense)', 'Cover (Open)', 'Nesting Sites', 'Water Access'],
+                        datasets: [
+                            {
+                                label: 'Ruffed Grouse (Young Forest)',
+                                data: [6, 9, 7, 8, 5],
+                                fill: true,
+                                backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                                borderColor: 'rgba(239, 68, 68, 1)',
+                                pointBackgroundColor: 'rgba(239, 68, 68, 1)'
+                            }, {
+                                label: 'Spotted Owl (Old Growth)',
+                                data: [7, 8, 3, 9, 6],
+                                fill: true,
+                                backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                                borderColor: 'rgba(16, 185, 129, 1)',
+                                pointBackgroundColor: 'rgba(16, 185, 129, 1)'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Hypothetical Habitat Needs'
+                            }
+                        },
+                        scales: {
+                            r: {
+                                beginAtZero: true,
+                                max: 10,
+                                ticks: { stepSize: 2 }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
