@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 12: Urban Forestry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: This SPA is structured as an interactive textbook chapter using a tabbed interface. A main navigation bar at the top allows users to select a learning objective (e.g., "Role of Trees," "Tree Selection," "Pruning"). Clicking a tab hides all other content sections and displays only the relevant one. This structure was chosen because it directly mirrors the chapter's objectives, providing a clear, intuitive, and focused learning path for a student. It avoids a long, disorienting scroll and breaks the content into manageable, thematic chunks, enhancing usability and comprehension. JavaScript manages the show/hide logic for each content `div` and updates the active state of the navigation buttons. -->
+    <!-- Visualization & Content Choices:
+        1. Role of Trees -> Goal: Inform/Engage -> Viz: Bar Chart (Chart.js) + Text Blocks -> Interaction: Buttons ("Heat Island," "Air Quality") update the chart data and descriptive text. -> Justification: Makes abstract benefits quantitative and interactive, connecting data to concepts. (Chart.js/Canvas).
+        2. Hardiness Zone Map -> Goal: Apply -> Viz: Dropdown Selector + HTML Table -> Interaction: Selecting a zone from the dropdown filters a table of common trees to show only those suitable for the selected zone. -> Justification: Simulates the practical application of a zone map, making the tree table an interactive tool. (HTML/JS).
+        3. Common Trees Table -> Goal: Organize/Inform -> Viz: HTML Table -> Interaction: Filtered by the zone selector (see above). Rows are shown/hidden based on `data-zones` attribute. -> Justification: The clearest way to present tabular data, made dynamic by the filter. (HTML/JS).
+        4. Tensiometer -> Goal: Explain -> Viz: Diagram built with HTML/CSS divs -> Interaction: A "Simulate" button changes the CSS (e.g., needle rotation, "water" level) of the diagram elements and updates a text explanation. -> Justification: An interactive diagram is more effective for explaining a process than a static image. (HTML/CSS/JS).
+        5. Pruning -> Goal: Inform -> Viz: Interactive HTML/Tailwind cards -> Interaction: Clicking on a pruning type (e.g., "Thinning") reveals a description and a simple "Do/Don't" visual using Unicode characters. -> Justification: Breaks a topic into digestible, clickable pieces. (HTML/Tailwind/JS).
+        6. PHC System -> Goal: Compare -> Viz: A static 2-column HTML table -> Interaction: None. -> Justification: A side-by-side table is the most direct and clear way to present a comparison between two systems. (HTML).
+        7. Careers -> Goal: Inform -> Viz: Grid of HTML/Tailwind cards -> Interaction: Simple card layout for readability. -> Justification: More visually engaging than a simple bulleted list. (HTML/Tailwind).
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        .content-section.hidden {
+            display: none;
+        }
+        .nav-button {
+            transition: all 0.3s ease;
+        }
+        .nav-button.active {
+            background-color: #15803d; 
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .tensiometer-gauge {
+            width: 150px;
+            height: 75px;
+            border: 8px solid #9ca3af;
+            border-bottom: none;
+            border-top-left-radius: 75px;
+            border-top-right-radius: 75px;
+            position: relative;
+            margin: 20px auto 0;
+        }
+        .tensiometer-needle {
+            width: 4px;
+            height: 70px;
+            background-color: #ef4444;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            margin-left: -2px;
+            transform-origin: bottom center;
+            transition: transform 0.5s ease;
+            transform: rotate(-45deg); 
+        }
+        .tensiometer-body {
+            width: 20px;
+            height: 150px;
+            background-color: #d1d5db;
+            margin: 0 auto;
+            position: relative;
+            border: 2px solid #6b7280;
+        }
+        .tensiometer-water {
+            width: 100%;
+            height: 60%;
+            background-color: #3b82f6;
+            position: absolute;
+            bottom: 0;
+            transition: height 0.5s ease;
+        }
+        .tensiometer-tip {
+            width: 30px;
+            height: 30px;
+            background-color: #fde68a;
+            border-radius: 50%;
+            margin: -2px auto 0;
+            border: 2px solid #6b7280;
+        }
+        .prune-card {
+            cursor: pointer;
+        }
+        .prune-details {
+            display: none;
+        }
+        .prune-card.active .prune-details {
+            display: block;
+        }
+        .prune-card.active {
+            border-color: #15803d;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-amber-50 text-gray-800 font-sans leading-relaxed">
+
+    <header class="bg-green-700 text-white p-6 shadow-md">
+        <h1 class="text-3xl md:text-4xl font-bold text-center">Week 12: Urban Forestry & Arboriculture</h1>
+    </header>
+
+    <nav class="sticky top-0 z-10 bg-white/90 backdrop-blur-md shadow-sm">
+        <div class="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+            <div class="flex flex-wrap justify-center gap-2 md:gap-3 py-3">
+                <button id="nav-intro" class="nav-button active text-xs md:text-sm font-medium py-2 px-3 rounded-lg bg-gray-100 hover:bg-green-100 text-green-800" data-target="intro">Introduction</button>
+                <button id="nav-role" class="nav-button text-xs md:text-sm font-medium py-2 px-3 rounded-lg bg-gray-100 hover:bg-green-100 text-green-800" data-target="role">Role of Trees</button>
+                <button id="nav-selection" class="nav-button text-xs md:text-sm font-medium py-2 px-3 rounded-lg bg-gray-100 hover:bg-green-100 text-green-800" data-target="selection">Tree Selection</button>
+                <button id="nav-soil" class="nav-button text-xs md:text-sm font-medium py-2 px-3 rounded-lg bg-gray-100 hover:bg-green-100 text-green-800" data-target="soil">Soils & Water</button>
+                <button id="nav-care" class="nav-button text-xs md:text-sm font-medium py-2 px-3 rounded-lg bg-gray-100 hover:bg-green-100 text-green-800" data-target="care">Tree Care</button>
+                <button id="nav-phc" class="nav-button text-xs md:text-sm font-medium py-2 px-3 rounded-lg bg-gray-100 hover:bg-green-100 text-green-800" data-target="phc">PHC System</button>
+                <button id="nav-careers" class="nav-button text-xs md:text-sm font-medium py-2 px-3 rounded-lg bg-gray-100 hover:bg-green-100 text-green-800" data-target="careers">Careers</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-4 md:p-8">
+
+        <!-- Section 1: Introduction -->
+        <section id="content-intro" class="content-section">
+            <h2 class="text-3xl font-bold text-green-800 mb-4">What is Urban Forestry?</h2>
+            <p class="mb-4 text-lg">
+                This section introduces the foundational concepts of managing trees in our cities. <strong class="font-semibold text-green-700">Urban forestry</strong> is the comprehensive care and management of all the trees within a municipality—what we call the <strong class="font-semibold text-green-700">Urban Tree Canopy (UTC)</strong>. It's a broad field that combines science, art, and policy to ensure our city trees are healthy, safe, and beneficial.
+            </p>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <h3 class="text-2xl font-semibold text-green-700 mb-2">Urban Forestry</h3>
+                    <p>This is the big picture. It involves planning, planting, protecting, and maintaining the entire tree population of a city. Urban foresters work with city planners, engineers, and the public to integrate trees into the urban environment. This large-scale management is key to developing <strong class="font-semibold text-green-700">Green Infrastructure</strong>—natural systems that provide essential services to our communities.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <h3 class="text-2xl font-semibold text-green-700 mb-2">Arboriculture</h3>
+                    <p>This is the hands-on practice. <strong class="font-semibold text-green-700">Arboriculture</strong> focuses on the health and care of individual trees. An arborist is a tree specialist who understands the biology of trees and is trained in all aspects of tree care, including planting, pruning, diagnosing problems, and safe removal. Think of an arborist as a "tree doctor."</p>
+                </div>
+            </div>
+            <p class="mt-6 text-lg">
+                Together, urban forestry (the forest) and arboriculture (the trees) work to build a resilient and beneficial urban canopy that improves our quality of life.
+            </p>
+        </section>
+
+        <!-- Section 2: Role of Trees -->
+        <section id="content-role" class="content-section hidden">
+            <h2 class="text-3xl font-bold text-green-800 mb-4">The Role of Trees in Urban Settings</h2>
+            <p class="mb-6 text-lg">
+                Urban trees are far more than just decoration; they are critical components of our <strong class="font-semibold text-green-700">Green Infrastructure</strong>. They provide tangible economic, environmental, and social benefits. This section explores these benefits. Click the buttons below to see how trees positively impact our environment and to update the chart with relevant data.
+            </p>
+            <div class="flex flex-wrap justify-center gap-4 mb-6">
+                <button id="btn-heat" class="benefit-button bg-blue-600 text-white py-2 px-5 rounded-lg shadow hover:bg-blue-700 transition">Reduce Heat Island</button>
+                <button id="btn-air" class="benefit-button bg-teal-600 text-white py-2 px-5 rounded-lg shadow hover:bg-teal-700 transition">Improve Air Quality</button>
+                <button id="btn-water" class="benefit-button bg-indigo-600 text-white py-2 px-5 rounded-lg shadow hover:bg-indigo-700 transition">Manage Stormwater</button>
+            </div>
+            
+            <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                <div class="chart-container mb-4">
+                    <canvas id="benefitsChart"></canvas>
+                </div>
+                <div id="benefits-text-display">
+                    <h3 class="text-2xl font-semibold text-blue-700 mb-2">Combating the Urban Heat Island Effect</h3>
+                    <p>Cities are hotter than surrounding rural areas due to pavement and buildings—this is the <strong class="font-semibold text-green-700">Urban Heat Island Effect</strong>. Trees provide shade, which cools surfaces, and release water vapor through transpiration, which cools the air. A healthy tree canopy can reduce local air temperatures by several degrees, lowering energy costs for cooling and making the city more comfortable.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Tree Selection -->
+        <section id="content-selection" class="content-section hidden">
+            <h2 class="text-3xl font-bold text-green-800 mb-4">Factors in Selecting Urban Trees</h2>
+            <p class="mb-6 text-lg">
+                Choosing the right tree for the right place is the most important decision in urban forestry. A poorly chosen tree can become a liability, while a well-chosen tree will provide benefits for decades. This section covers key selection factors, including an interactive tool to filter common trees by their climate suitability.
+            </p>
+
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <h3 class="text-2xl font-semibold text-green-700 mb-2">Hardiness & Zone Maps</h3>
+                    <p>A tree's <strong class="font-semibold text-green-700">hardiness</strong> is its ability to survive in a specific climate, especially its tolerance to minimum winter temperatures. The USDA <strong class="font-semibold text-green-700">Zone Map</strong> divides the country into zones based on these average minimums. You must select trees rated for your hardiness zone or a colder one.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <h3 class="text-2xl font-semibold text-green-700 mb-2">Growth Habit & Site</h3>
+                    <p>The <strong class="font-semibold text-green-700">growth habit</strong> refers to a tree's mature size, shape, and form (e.g., columnar, spreading, pyramidal). You must consider the available space, both above ground (for branches) and below ground (for roots). Never plant a large-growing tree under power lines or in a tiny planting strip.</p>
+                </div>
+            </div>
+
+            <h3 class="text-2xl font-bold text-green-800 mb-4">Interactive Tree Table</h3>
+            <p class="mb-4">Use the dropdown to filter the table and find trees suitable for a specific USDA Hardiness Zone. This demonstrates how to apply climate data to tree selection.</p>
+            
+            <div class="mb-4">
+                <label for="zone-selector" class="block text-lg font-medium text-gray-700">Filter by Hardiness Zone:</label>
+                <select id="zone-selector" class="mt-1 block w-full md:w-1/3 p-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                    <option value="all">Show All Zones</option>
+                    <option value="3">Zone 3</option>
+                    <option value="4">Zone 4</option>
+                    <option value="5">Zone 5</option>
+                    <option value="6">Zone 6</option>
+                    <option value="7">Zone 7</option>
+                    <option value="8">Zone 8</option>
+                    <option value="9">Zone 9</option>
+                </select>
+            </div>
+
+            <div class="overflow-x-auto bg-white rounded-lg shadow-md border border-gray-200">
+                <table id="tree-table" class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Common Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Scientific Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hardiness Zones</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Growth Habit</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tree-table-body" class="bg-white divide-y divide-gray-200">
+                        <!-- JS will populate this -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section 4: Soils & Water -->
+        <section id="content-soil" class="content-section hidden">
+            <h2 class="text-3xl font-bold text-green-800 mb-4">Functions of Soil & Water Management</h2>
+            <p class="mb-6 text-lg">
+                Urban soils are often terrible for tree growth—they are compacted, poorly drained, and low in organic matter. Understanding soil function is vital for tree survival. This section explores soil functions and a key tool for managing soil moisture.
+            </p>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <h3 class="text-2xl font-semibold text-green-700 mb-2">Soil Functions</h3>
+                    <p>Healthy soil is a living ecosystem. For trees, it must perform four key functions:</p>
+                    <ul class="list-disc list-inside mt-2 space-y-1">
+                        <li><strong>Anchorage:</strong> Physically hold the tree upright.</li>
+                        <li><strong>Water:</strong> Store and provide water to the roots.</li>
+                        <li><strong>Nutrients:</strong> Supply essential minerals for growth.</li>
+                        <li><strong>Oxygen:</strong> Allow roots to respire (breathe). Compaction destroys air spaces, suffocating roots.</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <h3 class="text-2xl font-semibold text-green-700 mb-2">The Tensiometer</h3>
+                    <p>A <strong class="font-semibold text-green-700">tensiometer</strong> is a tool used to measure soil moisture tension. It tells an arborist *how hard* a tree's roots have to pull to get water. It is *not* a moisture meter; it measures water potential. This helps prevent both over-watering (which drowns roots) and under-watering.</p>
+                    
+                    <div class="text-center mt-4">
+                        <div class="tensiometer-gauge">
+                            <div id="tensiometer-needle" class="tensiometer-needle"></div>
+                        </div>
+                        <div class="tensiometer-body">
+                            <div id="tensiometer-water" class="tensiometer-water"></div>
+                        </div>
+                        <div class="tensiometer-tip"></div>
+                    </div>
+                    
+                    <button id="simulate-soil" class="mt-4 w-full bg-amber-500 text-white py-2 px-4 rounded-lg shadow hover:bg-amber-600 transition">Simulate Soil Drying</button>
+                    <p id="tensiometer-text" class="mt-2 text-sm text-center font-medium text-blue-600">Soil is moist. Water is held loosely. Gauge reads low tension.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Tree Care -->
+        <section id="content-care" class="content-section hidden">
+            <h2 class="text-3xl font-bold text-green-800 mb-4">Pruning and Structural Support</h2>
+            <p class="mb-6 text-lg">
+                Proper care ensures trees are safe, healthy, and attractive. Pruning is the most common tree care practice, while cabling and bracing provide structural support to weak or damaged trees. Click on the cards below to learn about common pruning objectives.
+            </p>
+            <h3 class="text-2xl font-semibold text-green-700 mb-4">How to Prune Trees</h3>
+            <p class="mb-4">Pruning is done for specific objectives. It's not just "cutting branches." All cuts should be made just outside the branch collar to allow the tree to seal the wound properly. Never leave stubs and never make a "flush cut."</p>
+            <div class="grid md:grid-cols-3 gap-4">
+                <div id="prune-clean" class="prune-card bg-white p-5 rounded-lg shadow border-2 border-transparent hover:border-green-600 transition">
+                    <h4 class="text-xl font-semibold text-green-700">1. Cleaning</h4>
+                    <p class="text-sm text-gray-600">Click to learn more</p>
+                    <div class="prune-details mt-3 pt-3 border-t">
+                        <p>Removing dead, dying, diseased, or broken branches. This is the most basic and important pruning operation for tree health and safety.</p>
+                        <p class="mt-2 font-medium"><span class="text-green-600">DO:</span> Cut back to healthy wood. <br> <span class="text-red-600">DON'T:</span> Leave diseased stubs.</p>
+                    </div>
+                </div>
+                <div id="prune-raise" class="prune-card bg-white p-5 rounded-lg shadow border-2 border-transparent hover:border-green-600 transition">
+                    <h4 class="text-xl font-semibold text-green-700">2. Raising</h4>
+                    <p class="text-sm text-gray-600">Click to learn more</p>
+                    <div class="prune-details mt-3 pt-3 border-t">
+                        <p>Removing lower branches to provide clearance for pedestrians, vehicles, or buildings. This is very common in urban environments.</p>
+                        <p class="mt-2 font-medium"><span class="text-green-600">DO:</span> Prune gradually over time. <br> <span class="text-red-600">DON'T:</span> Remove more than 25% of the live canopy at once.</p>
+                    </div>
+                </div>
+                <div id="prune-reduce" class="prune-card bg-white p-5 rounded-lg shadow border-2 border-transparent hover:border-green-600 transition">
+                    <h4 class="text-xl font-semibold text-green-700">3. Reduction</h4>
+                    <p class="text-sm text-gray-600">Click to learn more</p>
+                    <div class="prune-details mt-3 pt-3 border-t">
+                        <p>Reducing the height or spread of a tree by pruning back branches to smaller, lateral branches. This is used to clear utility lines or reduce risk of failure.</p>
+                        <p class="mt-2 font-medium"><span class="text-green-600">DO:</span> Cut back to a lateral branch that is at least 1/3 the diameter of the cut stem. <br> <span class="text-red-600">DON'T:</span> "Top" the tree (indiscriminate flat cuts), which is very harmful.</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="text-2xl font-semibold text-green-700 mt-8 mb-4">Cabling and Bracing</h3>
+            <p class="mb-4">When pruning isn't enough, arborists use hardware to stabilize trees. This is specialized work to reduce the risk of failure in trees with weak branch unions or splits.</p>
+            <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                <p><strong class="font-semibold">Cables</strong> are strong steel wires installed in the upper canopy to limit the movement of branches. They are flexible and add support against wind or ice loads.</p>
+                <p class="mt-2"><strong class="font-semibold">Braces</strong> are rigid steel rods installed through weak unions or splits to "bolt" the tree together. They are often used in combination with cables.</p>
+            </div>
+        </section>
+
+        <!-- Section 6: PHC System -->
+        <section id="content-phc" class="content-section hidden">
+            <h2 class="text-3xl font-bold text-green-800 mb-4">Plant Health Care (PHC) System</h2>
+            <p class="mb-6 text-lg">
+                <strong class="font-semibold text-green-700">Plant Health Care (PHC)</strong> represents a major shift in thinking about tree management. Instead of waiting for a tree to get sick or infested (a reactive approach), PHC is a proactive, holistic system focused on keeping trees healthy from the start. This section compares PHC to older, traditional methods.
+            </p>
+            <div class="overflow-x-auto bg-white rounded-lg shadow-md border border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-lg font-medium text-gray-700">Feature</th>
+                            <th class="px-6 py-3 text-left text-lg font-medium text-green-700">Plant Health Care (PHC)</th>
+                            <th class="px-6 py-3 text-left text-lg font-medium text-gray-500">Traditional Tree Care</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td class="px-6 py-4 font-semibold">Philosophy</td>
+                            <td class="px-6 py-4">Proactive & Holistic: Health-focused</td>
+                            <td class="px-6 py-4">Reactive: Pest & problem-focused</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 font-semibold">Goal</td>
+                            <td class="px-6 py-4">Maintain optimal tree health and vitality.</td>
+                            <td class="px-6 py-4">"Cure" a specific problem (e.g., kill insects).</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 font-semibold">Monitoring</td>
+                            <td class="px-6 py-4">Regular site visits to monitor tree and soil health.</td>
+                            <td class="px-6 py-4">Called out only when a problem is visible.</td>
+                        </tr>
+                        <tr>
+                        <td class="px-6 py-4 font-semibold">Treatments</td>
+                            <td class="px-6 py-4">Focus on cultural practices (e.g., proper watering, mulching, soil improvement). Uses pesticides as a last resort.</td>
+                            <td class="px-6 py-4">Often relies on routine chemical sprays as a primary solution.</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 font-semibold">Client Role</td>
+                            <td class="px-6 py-4">A partner in the tree's health management plan.</td>
+                            <td class="px-6 py-4">A customer buying a service (e.g., a spray).</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="mt-4 text-lg">PHC is a more sustainable and effective long-term approach that prioritizes prevention over reaction, treating the tree as a whole system within its environment.</p>
+        </section>
+
+        <!-- Section 7: Careers -->
+        <section id="content-careers" class="content-section hidden">
+            <h2 class="text-3xl font-bold text-green-800 mb-4">Career Opportunities in Urban Forestry</h2>
+            <p class="mb-6 text-lg">
+                Urban forestry is a rapidly growing field with diverse career paths for those who love science, nature, and working outdoors. As cities increasingly recognize the value of their urban tree canopy, the demand for skilled professionals is high. This section outlines some of the primary career opportunities available.
+            </p>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 transition-all hover:shadow-lg hover:border-green-300">
+                    <h3 class="text-2xl font-semibold text-green-700 mb-2">Municipal Arborist / Urban Forester</h3>
+                    <p>Works for a city or town government. Manages the *entire* urban forest. Responsibilities include planning, public tree inventory, risk assessment, managing contracts, writing tree ordinances, and community outreach.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 transition-all hover:shadow-lg hover:border-green-300">
+                    <h3 class="text-2xl font-semibold text-green-700 mb-2">Commercial Arborist</h3>
+                    <p>Works for a private tree care company. This is the hands-on "tree doctor." Roles range from ground crew to climber to plant health care technician. They prune, remove, plant, and treat trees for residential and commercial clients.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 transition-all hover:shadow-lg hover:border-green-300">
+                    <h3 class="text-2xl font-semibold text-green-700 mb-2">Consulting Arborist</h3>
+                    <p>An expert who provides specialized advice. They don't typically do the physical work but are hired to write reports, appraise tree value, diagnose complex problems, manage tree preservation on construction sites, and serve as expert witnesses.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 transition-all hover:shadow-lg hover:border-green-300">
+                    <h3 class="text-2xl font-semibold text-green-700 mb-2">Utility Arborist</h3>
+                    <p>A specialist focused on managing vegetation near power lines. This is a critical role for public safety and preventing power outages. It involves specialized pruning techniques (e.g., reductions) and vegetation management planning.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 transition-all hover:shadow-lg hover:border-green-300">
+                    <h3 class="text-2xl font-semibold text-green-700 mb-2">Researcher / Scientist</h3>
+                    <p>Works at a university, government agency, or botanical garden. Conducts research on tree biology, invasive pests, new tree cultivars, urban soil science, and the benefits of trees. This science underpins the entire industry.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 transition-all hover:shadow-lg hover:border-green-300">
+                    <h3 class="text-2xl font-semibold text-green-700 mb-2">Non-Profit / Community Forester</h3>
+                    <p>Works for a non-profit organization focused on community greening. Organizes tree planting events, educates the public, writes grants, and advocates for green space and environmental equity in underserved neighborhoods.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center p-6 mt-12 bg-green-800 text-green-100 text-sm">
+        <p>Interactive Urban Forestry Chapter | A conceptual demo.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const treeData = [
+                { name: "Red Maple", sci: "Acer rubrum", zones: ["3", "4", "5", "6", "7", "8", "9"], habit: "Medium-Large, Oval", notes: "Very adaptable, great fall color. Avoid planting in high pH soils." },
+                { name: "Ginkgo", sci: "Ginkgo biloba", zones: ["3", "4", "5", "6", "7", "8"], habit: "Large, Spreading", notes: "Very tough, pest-resistant, good in cities. Plant males only (fruit is messy)." },
+                { name: "Honeylocust", sci: "Gleditsia triacanthos", zones: ["3", "4", "5", "6", "7", "8", "9"], habit: "Large, Open/Spreading", notes: "Dappled shade, tough, fast-growing. Tolerant of salt and drought." },
+                { name: "London Planetree", sci: "Platanus x acerifolia", zones: ["5", "6", "7", "8", "9"], habit: "Very Large, Spreading", notes: "Excellent urban tree, very tolerant of pollution and compacted soil. Can have disease issues." },
+                { name: "Littleleaf Linden", sci: "Tilia cordata", zones: ["3", "4", "5", "6", "7"], habit: "Medium, Pyramidal", notes: "Fragrant flowers, formal shape. Can be susceptible to aphids." },
+                { name: "Hackberry", sci: "Celtis occidentalis", zones: ["3", "4", "5", "6", "7", "8", "9"], habit: "Large, Irregular", notes: "Extremely tough and adaptable. Warty bark. Good native alternative." },
+                { name: "Live Oak", sci: "Quercus virginiana", zones: ["7", "8", "9"], habit: "Very Large, Spreading", notes: "Iconic southern tree. Needs ample space. Evergreen. (Warm climates only)" },
+                { name: "Bald Cypress", sci: "Taxodium distichum", zones: ["4", "5", "6", "7", "8", "9"], habit: "Large, Pyramidal", notes: "Deciduous conifer. Extremely tolerant of wet soils, but also grows well in dry sites." },
+                { name: "Serviceberry", sci: "Amelanchier spp.", zones: ["4", "5", "6", "7", "8"], habit: "Small, Multi-stem", notes: "Four-season interest: spring flowers, summer fruit, fall color. Good under power lines." }
+            ];
+
+            const benefitsData = {
+                heat: {
+                    labels: ['Paved Area', 'Shaded Pavement', 'Shaded Grass'],
+                    data: [95, 78, 75],
+                    backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                    borderColor: 'rgba(239, 68, 68, 1)',
+                    title: 'Surface Temperature Reduction (°F)',
+                    text: '<h3 class="text-2xl font-semibold text-blue-700 mb-2">Combating the Urban Heat Island Effect</h3><p>Cities are hotter than surrounding rural areas due to pavement and buildings—this is the <strong class="font-semibold text-green-700">Urban Heat Island Effect</strong>. Trees provide shade, which cools surfaces, and release water vapor through transpiration, which cools the air. A healthy tree canopy can reduce local air temperatures by several degrees, lowering energy costs for cooling and making the city more comfortable.</p>'
+                },
+                air: {
+                    labels: ['Ozone', 'Particulates (PM10)', 'Sulfur Dioxide'],
+                    data: [8, 12, 14],
+                    backgroundColor: 'rgba(13, 148, 136, 0.6)',
+                    borderColor: 'rgba(13, 148, 136, 1)',
+                    title: 'Pollutant Removal (Annual % by Canopy)',
+                    text: '<h3 class="text-2xl font-semibold text-teal-700 mb-2">Improving Air Quality</h3><p>Tree leaves act as natural filters, intercepting and absorbing airborne pollutants like ozone, particulate matter, and sulfur dioxide. Their large surface area traps particles, and their biological processes can break down gaseous pollutants. This cleaning effect is especially important in high-traffic urban corridors.</p>'
+                },
+                water: {
+                    labels: ['Impervious (Roof)', 'Tree Canopy (6" DBH)', 'Large Tree (30" DBH)'],
+                    data: [98, 35, 650],
+                    backgroundColor: 'rgba(79, 70, 229, 0.6)',
+                    borderColor: 'rgba(79, 70, 229, 1)',
+                    title: 'Stormwater Runoff Reduction (Gallons/Year)',
+                    text: '<h3 class="text-2xl font-semibold text-indigo-700 mb-2">Managing Stormwater</h3><p>Trees are excellent at stormwater management. The canopy intercepts rainfall, allowing it to evaporate before it hits the ground. The root system and leaf litter improve soil infiltration, reducing the volume of water that runs off into sewer systems. This helps prevent flooding and filters pollutants from the water.</p>'
+                }
+            };
+            
+            const navButtons = document.querySelectorAll('.nav-button');
+            const contentSections = document.querySelectorAll('.content-section');
+            const benefitsTextDisplay = document.getElementById('benefits-text-display');
+            const benefitButtons = document.querySelectorAll('.benefit-button');
+            let benefitsChart;
+
+            function showSection(targetId) {
+                contentSections.forEach(section => {
+                    section.classList.add('hidden');
+                });
+                document.getElementById('content-' + targetId).classList.remove('hidden');
+
+                navButtons.forEach(button => {
+                    button.classList.remove('active');
+                });
+                document.getElementById('nav-' + targetId).classList.add('active');
+            }
+
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    showSection(button.dataset.target);
+                });
+            });
+
+            function createBenefitsChart() {
+                const ctx = document.getElementById('benefitsChart').getContext('2d');
+                benefitsChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: benefitsData.heat.labels,
+                        datasets: [{
+                            label: benefitsData.heat.title,
+                            data: benefitsData.heat.data,
+                            backgroundColor: benefitsData.heat.backgroundColor,
+                            borderColor: benefitsData.heat.borderColor,
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: benefitsData.heat.title,
+                                font: {
+                                    size: 16
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function updateBenefitsChart(type) {
+                const data = benefitsData[type];
+                benefitsChart.data.labels = data.labels;
+                benefitsChart.data.datasets[0].data = data.data;
+                benefitsChart.data.datasets[0].label = data.title;
+                benefitsChart.data.datasets[0].backgroundColor = data.backgroundColor;
+                benefitsChart.data.datasets[0].borderColor = data.borderColor;
+                benefitsChart.options.plugins.title.text = data.title;
+                benefitsChart.update();
+                benefitsTextDisplay.innerHTML = data.text;
+            }
+
+            benefitButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    if (e.target.id === 'btn-heat') updateBenefitsChart('heat');
+                    if (e.target.id === 'btn-air') updateBenefitsChart('air');
+                    if (e.target.id === 'btn-water') updateBenefitsChart('water');
+                });
+            });
+
+            const treeTableBody = document.getElementById('tree-table-body');
+            const zoneSelector = document.getElementById('zone-selector');
+
+            function populateTreeTable() {
+                treeTableBody.innerHTML = '';
+                treeData.forEach(tree => {
+                    const row = document.createElement('tr');
+                    row.setAttribute('data-zones', JSON.stringify(tree.zones));
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${tree.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 italic">${tree.sci}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${tree.zones.join(', ')}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${tree.habit}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">${tree.notes}</td>
+                    `;
+                    treeTableBody.appendChild(row);
+                });
+            }
+
+            function filterTreeTable() {
+                const selectedZone = zoneSelector.value;
+                const rows = treeTableBody.querySelectorAll('tr');
+                rows.forEach(row => {
+                    const zones = JSON.parse(row.dataset.zones);
+                    if (selectedZone === 'all' || zones.includes(selectedZone)) {
+                        row.classList.remove('hidden');
+                    } else {
+                        row.classList.add('hidden');
+                    }
+                });
+            }
+
+            zoneSelector.addEventListener('change', filterTreeTable);
+
+            const soilButton = document.getElementById('simulate-soil');
+            const needle = document.getElementById('tensiometer-needle');
+            const water = document.getElementById('tensiometer-water');
+            const soilText = document.getElementById('tensiometer-text');
+            let soilIsWet = true;
+
+            soilButton.addEventListener('click', () => {
+                if (soilIsWet) {
+                    needle.style.transform = 'rotate(45deg)'; 
+                    water.style.height = '10%'; 
+                    soilText.textContent = 'Soil is dry. Water is held tightly. Gauge reads high tension (time to water!).';
+                    soilButton.textContent = 'Simulate Watering';
+                    soilIsWet = false;
+                } else {
+                    needle.style.transform = 'rotate(-45deg)'; 
+                    water.style.height = '60%'; 
+                    soilText.textContent = 'Soil is moist. Water is held loosely. Gauge reads low tension.';
+                    soilButton.textContent = 'Simulate Soil Drying';
+                    soilIsWet = true;
+                }
+            });
+
+            const pruneCards = document.querySelectorAll('.prune-card');
+            pruneCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const isActive = card.classList.contains('active');
+                    pruneCards.forEach(c => c.classList.remove('active'));
+                    if (!isActive) {
+                        card.classList.add('active');
+                    }
+                });
+            });
+
+            populateTreeTable();
+            createBenefitsChart();
+            showSection('intro');
+        });
+    </script>
+</body>
+</html>
